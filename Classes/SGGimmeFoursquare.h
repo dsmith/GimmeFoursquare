@@ -42,6 +42,7 @@
     @private
     NSString* username;
     NSString* password;
+    NSString* encodedAuthString;
     
     NSOperationQueue* operationQueue;
     
@@ -89,26 +90,19 @@
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
 - (NSString*) userInformation:(NSString*)userId badges:(BOOL)badges mayor:(BOOL)mayor;
-- (NSString*) friends;
+- (NSString*) historySince:(NSString*)sinceid limit:(int)limit;
+- (NSString*) friends:(NSString*)uid;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Venue methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) venuesNearbyCoordinate:(CLLocationCoordinate2D)coordinate withinRadius:(double)radius amount:(int)amount keyword:(NSString*)keyword;
+- (NSString*) venuesNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(int)limit keyword:(NSString*)keyword;
 - (NSString*) venueInformation:(NSString*)vid;
-
-//name - the name of the venue
-//address - the address of the venue (e.g., "202 1st Avenue")
-//crossstreet - the cross streets (e.g., "btw Grand & Broome")
-//city - the city name where this venue is
-//state - the state where the city is
-//zip - (optional) the ZIP code for the venue
-//cityid - (required) the foursquare cityid where the venue is
-//phone - (optional) the phone number for the venue
-
-- (NSString*) addVenue:(NSString*)name addressDictionary:(NSDictionary*)addressDictionary;
+- (NSString*) addVenue:(NSString*)vid addressDictionary:(NSDictionary*)addressDictionary;
+- (NSString*) editVenue:(NSString*)vid addressDictionary:(NSDictionary*)addressDictionary;
+- (NSString*) venueClosed:(NSString*)vid;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -117,16 +111,22 @@
 
 - (NSString*) tipsNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(NSInteger)limit;
 - (NSString*) addTipToVenue:(NSString*)vid tip:(NSString*)tip type:(NSString*)type;
-
+- (NSString*) markTipAsToDo:(NSString*)tid;
+- (NSString*) markTipAsDone:(NSString*)tid;
+- (NSString*) unmarkTip:(NSString*)tid;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Favorites 
+#pragma mark Friends methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) getFavorites:(NSString*)username;
-- (NSString*) addFavorite:(NSString*)venueId;
-- (NSString*) removeFavorite:(NSString*)venueId;
+- (NSString*) pendingFriendRequests;
+- (NSString*) approveFriendRequest:(NSString*)uid;
+- (NSString*) denyFriendRequest:(NSString*)uid;
+- (NSString*) sendFriendRequest:(NSString*)uid;
+- (NSString*) findFriendsViaName:(NSString*)keyword;
+- (NSString*) findFriendsViaTwitter:(NSString*)keyword;
+- (NSString*) findFriendsViaPhone:(NSString*)keyword;
 
 @end
 

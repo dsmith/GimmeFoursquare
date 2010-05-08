@@ -35,30 +35,12 @@
 #import "SGGimmeFoursquare.h"
 
 #import "NSData+Base64.h"
-#import "JSON.h"
+#import "NSDictionary_JSONExtensions.h"
 
 static SGGimmeFoursquare* sharedGimmeFoursquare = nil;
 static int responseIdNumber = 0;
 
 static NSString* foursquareURL = @"http://api.playfoursquare.com/v1";
-
-enum SGFoursquareResponse {
-    
-    kSGFoursquareResponse_Validation = 0,
-    kSGFoursquareResponse_Cities,
-    kSGFoursquareResponse_City,
-    kSGFoursquareResponse_Data,
-    kSGFoursquareResponse_Checkins,
-    kSGFoursquareResponse_Checkin,
-    kSGFoursquareResponse_User,
-    kSGFoursquareResponse_Friends,
-    kSGFoursquareResponse_Venues,
-    kSGFoursquareResponse_Venue,
-    kSGFoursquareResponse_Tips,
-    kSGFoursquareResponse_Tip,
-    kSGFoursquareResponse_Favorite
-    
-};
 
 typedef NSInteger SGFoursquareResponse;
 
@@ -68,9 +50,13 @@ typedef NSInteger SGFoursquareResponse;
 - (void) pushInvocationWithArgs:(NSArray*)args;
 
 - (NSString*) getNextRequestId;
-- (NSString*) appendResponseType:(SGFoursquareResponse)type toRequestId:(NSString*)requestId;
-- (NSString*) removeResponseTypeFromRequestId:(NSString*)requestId;
-- (SGFoursquareResponse) getResponseTypeFromRequestId:(NSString*)requestId;
+
+- (NSString*) getEncodedAuthString;
+- (NSMutableDictionary*) getLatLonParams:(CLLocationCoordinate2D)coordinate;
+
+- (NSString*) _updateStatus:(NSString*)status ofTip:(NSString*)tid;
+- (NSString*) _updateFriendRequest:(NSString*)uid status:(NSString*)status;
+- (NSString*) _findFriends:(NSString*)keyword byMedium:(NSString*)meduim;
 
 @end
 
@@ -134,15 +120,17 @@ typedef NSInteger SGFoursquareResponse;
 {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
  
-    if([defaults boolForKey:@"SGFourSquare_Valid"]) {
+    if([defaults boolForKey:@"SGFoursquare_Valid"]) {
     
-        NSString* cachedUsername = [defaults stringForKey:@"SGFourSquare_Username"];
-        NSString* cachedPassword = [defaults stringForKey:@"SGFourSquare_Password"];
+        NSString* cachedUsername = [defaults stringForKey:@"SGFoursquare_Username"];
+        NSString* cachedPassword = [defaults stringForKey:@"SGFoursquare_Password"];
     
         if(cachedPassword && cachedUsername) {
      
             username = cachedUsername;
             password = cachedPassword;
+            
+            encodedAuthString = [self getEncodedAuthString];
             
             return YES;
         }
@@ -155,35 +143,21 @@ typedef NSInteger SGFoursquareResponse;
 - (void) clearSession
 {
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setBool:NO forKey:@"SGFourSquare_Valid"];
+    [defaults setBool:NO forKey:@"SGFoursquare_Valid"];
 }
 
 - (NSString*) validateUsername:(NSString*)name password:(NSString*)pw
 {
-    NSString* requestId = nil;
+    username = [name copy];
+    password = [pw copy];
+        
+    encodedAuthString = [self getEncodedAuthString];
     
-    if(name && pw) {
-        
-        NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-        
-        username = [name copy];
-        password = [pw copy];
-        
-        [defaults setObject:name forKey:@"SGFourSquare_Username"];
-        [defaults setObject:pw forKey:@"SGFourSquare_Password"];
-        requestId = [self getNextRequestId];
-        
-        NSArray* args = [NSArray arrayWithObjects:@"GET", 
-                         [foursquareURL stringByAppendingString:@"/user.json"], 
-                         @"badges=1&mayor=1", 
-                         [self appendResponseType:kSGFoursquareResponse_Validation toRequestId:requestId],
-                         nil];
-        
-        [self pushInvocationWithArgs:args];
-        
-    }
+    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:name forKey:@"SGFoursquare_Username"];
+    [defaults setObject:pw forKey:@"SGFoursquare_Password"];
     
-    return requestId;
+    return [self userInformation:nil badges:FALSE mayor:FALSE];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -193,53 +167,46 @@ typedef NSInteger SGFoursquareResponse;
 
 - (NSString*) activeCities
 {
-    NSString* requestId = [self getNextRequestId];
-    
     NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     [foursquareURL stringByAppendingString:@"/cities.json"],
-                     @"",
-                     [self appendResponseType:kSGFoursquareResponse_Cities toRequestId:requestId],
+                     @"/cities.json",
+                     [NSNull null],
                      nil];
     
     [self pushInvocationWithArgs:args];
     
-    return requestId;
+    return [self getNextRequestId];;
 }
 
 - (NSString*) closestCityToCoordinate:(CLLocationCoordinate2D)coordinate cityId:(NSString*)cityId
 {
-    NSString* requestId = [self getNextRequestId];
+    NSMutableDictionary* params = [self getLatLonParams:coordinate];
     
-    if(!cityId || [cityId isKindOfClass:[NSNull class]])
-        cityId = @"";
-    else
-        cityId = [NSString stringWithFormat:@"cityid=%@&", cityId];
+    if(cityId)
+        [params setObject:cityId forKey:@"cityid"];
 
     
     NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     [foursquareURL stringByAppendingString:@"/checkcity.json"],
-                     [NSString stringWithFormat:@"%@geolat=%f&geolong=%f", cityId, coordinate.latitude, coordinate.longitude],
-                     [self appendResponseType:kSGFoursquareResponse_City toRequestId:requestId],
-                     nil];
+                        @"/checkcity",
+                        params,
+                        nil];
     
     [self pushInvocationWithArgs:args];
     
-    return requestId;
+    return [self getNextRequestId];;
 }
 
 - (NSString*) updateDefaultCity:(NSString*)cityId
 {
-    NSString* requestId = [self getNextRequestId];
+    NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:cityId, @"cityid", nil];
     
     NSArray* args = [NSArray arrayWithObjects:@"POST",
-                     [foursquareURL stringByAppendingString:@"/switchcity.json"],
-                     [NSString stringWithFormat:@"cityid=%@", cityId],
-                     [self appendResponseType:kSGFoursquareResponse_Data toRequestId:requestId],
-                     nil];
+                        @"/switchcity",
+                        params,
+                        nil];
     
     [self pushInvocationWithArgs:args];
     
-    return requestId;
+    return [self getNextRequestId];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,60 +216,48 @@ typedef NSInteger SGFoursquareResponse;
 
 - (NSString*) checkIns:(NSString*)cityId
 {
-    NSString* requestId = [self getNextRequestId];
+    NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:cityId, @"cityid", nil];
     
     NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     [foursquareURL stringByAppendingString:@"/checkins.json"],
-                    [NSString stringWithFormat:@"cityid=%@", cityId],
-                    [self appendResponseType:kSGFoursquareResponse_Checkins toRequestId:requestId],
-                    nil];
+                        @"/checkins",
+                        params,
+                        nil];
     
     [self pushInvocationWithArgs:args];
     
-    return requestId;
+    return [self getNextRequestId];
 }
 
 - (NSString*) shoutMessage:(NSString*)message coordinate:(CLLocationCoordinate2D)coordinate twitter:(BOOL)enabled
 {
-    NSString* requestId = [self getNextRequestId];
     
-    NSMutableString* httpBody = [NSMutableString string];
+    NSMutableDictionary* params = [self getLatLonParams:coordinate];
+    [params setObject:[NSString stringWithFormat:@"%i", enabled] forKey:@"twitter"];
+    [params setObject:message forKey:@"shout"];
     
-    
-    [httpBody appendFormat:@"geolat=%f&geolong=%f", coordinate.latitude, coordinate.longitude];
-    [httpBody appendFormat:@"&twitter=%i", enabled ? 1 : 0];
-    
-    if(!message)
-        message = @"";
-    
-    [httpBody appendFormat:@"&shout=%@", message];
-    
-    
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     [foursquareURL stringByAppendingString:@"/checkin.json"],
-                     httpBody,
-                     [self appendResponseType:kSGFoursquareResponse_Checkin toRequestId:requestId],
-                     nil];
+    NSArray* args = [NSArray arrayWithObjects:@"POST",
+                        @"/checkin",
+                        params,
+                        nil];
     
     [self pushInvocationWithArgs:args];
     
-    return requestId;
+    return [self getNextRequestId];;
 }
 
 - (NSString*) checkIntoVenue:(NSString*)vid coordinate:(CLLocationCoordinate2D)coord
 {
-    NSString* requestId = [self getNextRequestId];
+    NSMutableDictionary* params = [self getLatLonParams:coord];
+    [params setObject:vid forKey:@"vid"];
     
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     [foursquareURL stringByAppendingString:@"/checkin.json"],
-                     [NSString stringWithFormat:@"vid=%@&geolat=%f&geolong=%f", vid, coord.latitude, coord.longitude],
-                     [self appendResponseType:kSGFoursquareResponse_Checkin toRequestId:requestId],
-                     nil];
+    NSArray* args = [NSArray arrayWithObjects:@"POST",
+                            @"/checkin",
+                            params,
+                            nil];
     
     [self pushInvocationWithArgs:args];
     
-    return requestId;
-    
+    return [self getNextRequestId];;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -312,38 +267,58 @@ typedef NSInteger SGFoursquareResponse;
 
 - (NSString*) userInformation:(NSString*)userId badges:(BOOL)badges mayor:(BOOL)mayor
 {
-    NSString* requestId = [self getNextRequestId];
-    
+    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                   [NSString stringWithFormat:@"%i", badges], @"badges",
+                                   [NSString stringWithFormat:@"%i", badges], @"mayor",
+                                   nil];
     if(userId)
-        userId = [NSString stringWithFormat:@"uid=%@&", userId];
-    else
-        userId = @"";
+        [params setObject:userId forKey:@"uid"];
 
-    
     NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     [foursquareURL stringByAppendingString:@"/user.json"],
-                     [NSString stringWithFormat:@"%@badges=%i&mayor=%i", userId, badges ? 1 : 0, mayor ? 1 : 0],
-                     [self appendResponseType:kSGFoursquareResponse_User toRequestId:requestId],
+                     @"user",
+                     params,
                      nil];
     
     [self pushInvocationWithArgs:args];
     
-    return requestId;
+    return [self getNextRequestId];;
 }
 
-- (NSString*) friends
+- (NSString*) historySince:(NSString*)sinceid limit:(int)limit
 {
-    NSString* requestId = [self getNextRequestId];
+    NSMutableDictionary* params = [NSMutableDictionary dictionary];
+    
+    if(sinceid)
+        [params setObject:sinceid forKey:@"sinceid"];
+    
+    if(limit > 0)
+        [params setObject:[NSString stringWithFormat:@"%i", limit] forKey:@"l"];
     
     NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     [foursquareURL stringByAppendingString:@"/friends.json"],
-                     @"",
-                     [self appendResponseType:kSGFoursquareResponse_Friends toRequestId:requestId],
+                     @"history",
+                     params,
+                     nil];
+    
+    [self pushInvocationWithArgs:args];
+    
+    return [self getNextRequestId];;
+}
+
+- (NSString*) friends:(NSString*)uid
+{
+    NSMutableDictionary* params = [NSMutableDictionary dictionary];
+
+    if(uid)
+        [params setObject:uid forKey:@"uid"];
+    
+    NSArray* args = [NSArray arrayWithObjects:@"GET",
+                     @"friends",
+                     params,
                      nil];
     
     [self pushInvocationWithArgs:args];    
     
-    return requestId;
+    return [self getNextRequestId];;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -351,64 +326,82 @@ typedef NSInteger SGFoursquareResponse;
 #pragma mark Venue methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) venuesNearbyCoordinate:(CLLocationCoordinate2D)coordinate withinRadius:(double)radius amount:(int)amount keyword:(NSString*)keyword;
+- (NSString*) venuesNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(int)limit keyword:(NSString*)keyword;
 {
-    NSString* requestId = [self getNextRequestId];
+    NSMutableDictionary* params = [self getLatLonParams:coordinate];
+    
+    if(limit > 0)
+        [params setObject:[NSString stringWithFormat:@"%i", limit] forKey:@"l"];
+    
+    if(keyword)
+        [params setObject:keyword forKey:@"q"];
     
     NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     [foursquareURL stringByAppendingString:@"/venues.json"],
-                     [NSString stringWithFormat:@"geolat=%f&geolong=%f&r=%f&q=%@&l=%i", coordinate.latitude, coordinate.longitude, radius, keyword, amount],
-                     [self appendResponseType:kSGFoursquareResponse_Venues toRequestId:requestId],
-                     nil];
+                        @"/venues",
+                        params,
+                        nil];
     
     [self pushInvocationWithArgs:args];    
     
-    return requestId;
+    return [self getNextRequestId];;
 }
 
 - (NSString*) venueInformation:(NSString*)vid
 {
-    NSString* requestId = [self getNextRequestId];
+    NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:vid, @"vid", nil];
     
     NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     [foursquareURL stringByAppendingString:@"/venue.json"],
-                     [NSString stringWithFormat:@"vid=%@", vid],
-                     [self appendResponseType:kSGFoursquareResponse_Venue toRequestId:requestId],
-                     nil];
+                        @"/venue",
+                        params,
+                        nil];
     
     [self pushInvocationWithArgs:args];    
     
-    return requestId;
+    return [self getNextRequestId];
 }
 
 - (NSString*) addVenue:(NSString*)name addressDictionary:(NSDictionary*)addressDictionary
 {
-    NSString* requestId = [self getNextRequestId];
-    
-    NSMutableString* httpBody = [[NSMutableString alloc] init];
-    NSString* value;
-    for(NSString* key in addressDictionary) {
-        
-        value = [addressDictionary objectForKey:key];
-        if(![value isKindOfClass:[NSNull class]]) 
-            [httpBody appendFormat:@"&%@=%@", key, [addressDictionary objectForKey:key]];
-    }
-            
-    if([httpBody length])
-        [httpBody deleteCharactersInRange:NSRangeFromString(@"0,1")];
+    NSMutableDictionary* params = [NSDictionary dictionaryWithDictionary:addressDictionary];
+    [params setObject:name forKey:@"vid"];
     
     NSArray* args = [NSArray arrayWithObjects:@"POST",
-                     [foursquareURL stringByAppendingString:@"/addvenue.json"],
-                     httpBody,
-                     [self appendResponseType:kSGFoursquareResponse_Venue toRequestId:requestId],
+                     @"/addvenue",
+                     params,
                      nil];
     
     [self pushInvocationWithArgs:args]; 
     
-    [httpBody release];
+    return [self getNextRequestId];;
+}
+
+- (NSString*) editVenue:(NSString*)vid addressDictionary:(NSDictionary*)addressDictionary
+{
+    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithDictionary:addressDictionary];
+    [params setValue:@"vid" forKey:vid];
     
-    return requestId;
-                     
+    NSArray* args = [NSArray arrayWithObjects:@"POST",
+                     @"/venue/proposeedit",
+                     addressDictionary,
+                     nil];
+    
+    [self pushInvocationWithArgs:args];
+
+    return [self getNextRequestId];;
+}
+
+- (NSString*) venueClosed:(NSString*)vid
+{
+    NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:vid, @"vid", nil];
+
+    NSArray* args = [NSArray arrayWithObjects:@"POST",
+                        @"/venue/flagclosed",
+                        params, 
+                        nil];
+
+    [self pushInvocationWithArgs:args];
+        
+    return [self getNextRequestId];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -418,34 +411,139 @@ typedef NSInteger SGFoursquareResponse;
 
 - (NSString*) tipsNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(NSInteger)limit
 {
-    NSString* requestId = [self getNextRequestId];
-    
+    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                    [NSString stringWithFormat:@"%f", coordinate.latitude], @"geolat",
+                                    [NSString stringWithFormat:@"%f", coordinate.longitude], @"geolon",
+                                        nil];
+    if(limit > 0)
+        [params setObject:[NSString stringWithFormat:@"%i", limit] forKey:@"limit"];
+
     NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     [foursquareURL stringByAppendingString:@"/tips.json"],
-                     [NSString stringWithFormat:@"geolat=%f&geolong=%f&l=%i", coordinate.latitude, coordinate.longitude, limit],
-                     [self appendResponseType:kSGFoursquareResponse_Tips toRequestId:requestId],
-                     nil];
+                        @"tips",
+                        params,
+                        nil];
     
     [self pushInvocationWithArgs:args];
     
-    return requestId;
-    
+    return [self getNextRequestId];;
 }
 
 - (NSString*) addTipToVenue:(NSString*)vid tip:(NSString*)tip type:(NSString*)type
 {
-    NSString* requestId = [self getNextRequestId];
+    NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:
+                            vid, @"vid",
+                            tip, @"tip",
+                            type, @"type",
+                            nil];
     
     NSArray* args = [NSArray arrayWithObjects:@"POST",
-                     [foursquareURL stringByAppendingFormat:@"/addtip.json"],
-                     [NSString stringWithFormat:@"vid=%@&tip=%@&type=%i", vid, tip, type],
-                     [self appendResponseType:kSGFoursquareResponse_Tip toRequestId:requestId],
+                     @"/addtip",
+                     params,
                      nil];
     
     [self pushInvocationWithArgs:args];
     
-    return requestId;
+    return [self getNextRequestId];;
 }
+
+- (NSString*) markTipAsToDo:(NSString*)tid
+{
+    return [self _updateStatus:@"marktodo" ofTip:tid];
+}
+
+- (NSString*) markTipAsDone:(NSString*)tid
+{
+    return [self _updateStatus:@"markdone" ofTip:tid];
+}
+
+- (NSString*) unmarkTip:(NSString*)tid
+{
+    return [self _updateStatus:@"unmark" ofTip:tid];
+}
+
+- (NSString*) _updateStatus:(NSString*)status ofTip:(NSString*)tid
+{
+    NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:tid, @"tid", nil];
+    NSArray* args = [NSArray arrayWithObjects:@"POST",
+                     [NSString stringWithFormat:@"/tip/%@", status],
+                     params,
+                     nil];
+    [self pushInvocationWithArgs:args];
+    
+    return [self getNextRequestId];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark Friends methods 
+//////////////////////////////////////////////////////////////////////////////////////////////// 
+
+- (NSString*) pendingFriendRequests
+{
+    NSArray* args = [NSArray arrayWithObjects:@"GET",
+                     @"/friend/requests",
+                     [NSNull null],
+                     nil];
+
+    [self pushInvocationWithArgs:args];
+    
+    return [self getNextRequestId];
+}
+
+- (NSString*) approveFriendRequest:(NSString*)uid
+{
+    return [self _updateFriendRequest:uid status:@"approve"];
+}
+
+- (NSString*) denyFriendRequest:(NSString*)uid
+{
+    return [self _updateFriendRequest:uid status:@"deny"];
+}
+
+- (NSString*) sendFriendRequest:(NSString*)uid
+{
+    return [self _updateFriendRequest:uid status:@"sendrequest"];
+}
+
+- (NSString*) _updateFriendRequest:(NSString*)uid status:(NSString*)status
+{
+    NSArray* args = [NSArray arrayWithObjects:@"POST",
+                     [NSString stringWithFormat:@"/friend/%@", status],
+                     [NSNull null],
+                     nil];
+
+    [self pushInvocationWithArgs:args];
+    
+    return [self getNextRequestId];
+}
+
+- (NSString*) findFriendsViaName:(NSString*)keyword
+{
+    return [self _findFriends:keyword byMedium:@"byname"];
+}
+
+- (NSString*) findFriendsViaTwitter:(NSString*)keyword
+{
+    return [self _findFriends:keyword byMedium:@"bytwitter"];
+}
+
+- (NSString*) findFriendsViaPhone:(NSString*)keyword
+{
+    return [self _findFriends:keyword byMedium:@"byphone"];
+}
+
+- (NSString*) _findFriends:(NSString*)keyword byMedium:(NSString*)meduim
+{
+    NSArray* args = [NSArray arrayWithObjects:@"GET",
+                     [NSString stringWithFormat:@"/findfriends/%@", meduim],
+                     [NSNull null],
+                     nil];
+
+    [self pushInvocationWithArgs:args];
+
+    return [self getNextRequestId];
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -454,180 +552,26 @@ typedef NSInteger SGFoursquareResponse;
 
 - (void) failed:(NSDictionary*)response
 {
-    NSString* requestId = [response objectForKey:@"requestId"];
-    
-    SGFoursquareResponse type = [self getResponseTypeFromRequestId:requestId];
-    
-    if(type == kSGFoursquareResponse_Favorite)
-        NSLog([response description]);
-    
     for(id<SGGimmeFoursquareDelegate> delegate in delegates)
-        [delegate fourSquare:self
-               requestFailed:[self removeResponseTypeFromRequestId:[response objectForKey:@"requestId"]]
-                       error:[response objectForKey:@"error"]];
-    
-    
+        [delegate fourSquare:self requestFailed:[response objectForKey:@"requestId"] error:[response objectForKey:@"error"]];
 }
 
 - (void) succeeded:(NSDictionary*)response;
 {
-    NSString* requestId = [response objectForKey:@"requestId"];
-    NSString* responseObject = [response objectForKey:@"responseObject"];
-    
-    SGFoursquareResponse type = [self getResponseTypeFromRequestId:requestId];
-    
-    NSDictionary* foursquareResponseObject = (NSDictionary*)[responseObject JSONValue];
-        
-    requestId = [self removeResponseTypeFromRequestId:requestId];
-    
-    switch (type) {
-            
-        case kSGFoursquareResponse_Validation:
-        {
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"user"];
-            
-            NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-            
-            if(!foursquareResponseObject) {
-                
-                [self failed:response];
-                [defaults setBool:NO forKey:@"SGFourSquare_Valid"];
-                return;
-                
-            } else {
-                            
-                [defaults setBool:YES forKey:@"SGFourSquare_Valid"];
-            }
-            
-            
-//            NSArray* args = [NSArray arrayWithObjects:@"POST",
-//                             [favoritesURL stringByAppendingFormat:@"/ihe/foursquare/user"],
-//                             [NSString stringWithFormat:@"username=%@&password=%@", username, password],
-//                             [self appendResponseType:kSGFoursquareResponse_Favorite toRequestId:[self getNextRequestId]],
-//                             nil];
-//            
-//            [self pushInvocationWithArgs:args];
-                     
-                                
-            break;
-        }
-            
-        case kSGFoursquareResponse_Cities:
-        {
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"cities"];
-            break;
-        }
+    NSData* responseObject = [response objectForKey:@"responseObject"];
+    NSDictionary* foursquareResponseObject = [NSDictionary dictionaryWithJSONData:responseObject error:nil];
 
-        case kSGFoursquareResponse_City:
-        {
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"city"];
-            break;
-        }
-            
-        case kSGFoursquareResponse_Data:
-        {
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"data"];
-            break;
-        }
-            
-        case kSGFoursquareResponse_Checkins:
-        {
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"checkins"];
-            break;
-        }
-            
-        case kSGFoursquareResponse_Checkin:
-        {
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"checkin"];
-            break;
-        }
-            
-        case kSGFoursquareResponse_User:
-        {            
-            if(!foursquareResponseObject) {
-                
-                responseObject = [responseObject stringByAppendingString:@"}"];
-                foursquareResponseObject = [responseObject JSONValue];
-                
-            }            
-            
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"user"];
-            
-            break;
-        }
-            
-        case kSGFoursquareResponse_Friends:
-        {
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"friends"];
-            break;
-        }
-            
-        case kSGFoursquareResponse_Venues:
-        {
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"venues"];
-            break;
-        }
-            
-        case kSGFoursquareResponse_Venue:
-        {
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"venue"];
-            break;
-        }
-            
-        case kSGFoursquareResponse_Tips:
-        {
-            if(!foursquareResponseObject) {
-                
-                responseObject = [responseObject stringByReplacingOccurrencesOfString:@"},{" withString:@"}},{"];
-                responseObject = [responseObject stringByReplacingOccurrencesOfString:@"{\"group\":" withString:@""];
-                responseObject = [responseObject stringByReplacingOccurrencesOfString:@"}]}" withString:@"}}]"];
-                responseObject = [responseObject stringByReplacingOccurrencesOfString:@"}}}" withString:@"}}"];
-                responseObject = [responseObject stringByReplacingOccurrencesOfString:@"\":\"id\"" withString:@"\":{\"id\""];
-                
-                foursquareResponseObject = [responseObject JSONValue];
-                
-            }                        
-            
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"tips"];
-            break;
-        }
-            
-        case kSGFoursquareResponse_Tip:
-        {
-            foursquareResponseObject = [foursquareResponseObject objectForKey:@"tip"];
-            break;
-        }
-                        
-        default:
-            NSLog(@"Unknown type");
-            
-    }
-    
     for(id<SGGimmeFoursquareDelegate> delegate in delegates)
-        [delegate fourSquare:self requestSucceeded:requestId responseObject:foursquareResponseObject];
+        [delegate fourSquare:self
+            requestSucceeded:[response objectForKey:@"requestId"]
+              responseObject:foursquareResponseObject];
 }
 
 - (NSString*) getNextRequestId
 {
     responseIdNumber++;
-    return [[NSString alloc] initWithFormat:@"%i", responseIdNumber];
+    return [[[NSString alloc] initWithFormat:@"%i", responseIdNumber] autorelease];
 }
-
-- (NSString*) appendResponseType:(SGFoursquareResponse)type toRequestId:(NSString*)requestId
-{
-    return [NSString stringWithFormat:@"%i-%@", type, requestId];
-}
-
-- (NSString*) removeResponseTypeFromRequestId:(NSString*)requestId
-{
-    return [[requestId componentsSeparatedByString:@"-"] objectAtIndex:1];
-}
-
-- (SGFoursquareResponse) getResponseTypeFromRequestId:(NSString*)requestId
-{
-    return [[[requestId componentsSeparatedByString:@"-"] objectAtIndex:0] intValue];
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -635,36 +579,26 @@ typedef NSInteger SGFoursquareResponse;
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 - (void) sendHTTPRequest:(NSString*)type toURL:(NSString*)file withParams:(NSString*)params requestId:(NSString*)requestId
-{
-	NSData *returnData;
-    NSHTTPURLResponse *theResponse;
-    NSError *theError;
-	
-    NSString* authString = [NSString stringWithFormat:@"%@:%@", username, password];
-    NSData* data = [authString dataUsingEncoding:NSUTF8StringEncoding];
-    
-    size_t size;
-    char* encodedString = NewBase64Encode([data bytes], [data length], NO, &size);
-    
-    NSString* encodedAuthString = [NSString stringWithCString:encodedString encoding:NSUTF8StringEncoding];
-        
+{	
     if(params) {
         params = [params stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
         file = [file stringByAppendingFormat:@"?%@", params];
     }
     
-    NSURL* url = [NSURL URLWithString:file];
-	NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url
+    NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@", foursquareURL, file]];
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url
                                                            cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
                                                        timeoutInterval:10];
 	
-	[request setHTTPMethod:type];
+    [request setHTTPMethod:type];
     [request setValue:[NSString stringWithFormat:@"Basic %@", encodedAuthString] forHTTPHeaderField:@"Authorization"];
-    	
-	returnData = [NSURLConnection sendSynchronousRequest:request returningResponse:&theResponse error:&theError];
+    
+    NSError* theError;
+    NSHTTPURLResponse* theResponse;
+    NSData* returnData = [NSURLConnection sendSynchronousRequest:request returningResponse:&theResponse error:&theError];
 	
-	// Possible loss of connection
-	if(!returnData) {
+    // Possible loss of connection
+    if(!returnData) {
 		for(int i = 0; i < 3 && !returnData; i++) {
 			NSLog(@"Retrying %@ request to %@...", type, [url description]);
 			returnData = [NSURLConnection sendSynchronousRequest:request returningResponse:&theResponse error:&theError];	
@@ -672,19 +606,20 @@ typedef NSInteger SGFoursquareResponse;
             if(theError)
                 break;
 		}
-	}
-	
-    NSString* payload = nil;
-    
-    if(returnData)
-        payload = [[[NSString alloc] initWithData:returnData encoding:NSASCIIStringEncoding] autorelease];
-    
+    }
+        
     if(theResponse && ([theResponse statusCode] >= 300 || [theResponse statusCode] < 200)) {
      
-        if(!theError)
-            theError = [NSError errorWithDomain:payload ? payload : [NSHTTPURLResponse localizedStringForStatusCode:[theResponse statusCode]]
-                                           code:[theResponse statusCode]
-                                       userInfo:[theResponse allHeaderFields]];
+        if(!theError) {
+
+            NSString* domain = nil;
+            if(returnData)
+                domain = [[NSString alloc] initWithData:returnData encoding:NSUTF8StringEncoding];
+            else
+                domain = [NSHTTPURLResponse localizedStringForStatusCode:[theResponse statusCode]];
+            
+            theError = [NSError errorWithDomain:domain code:[theResponse statusCode] userInfo:[theResponse allHeaderFields]];
+        }
             
      
     }
@@ -696,7 +631,7 @@ typedef NSInteger SGFoursquareResponse;
         
     } else {
 	
-        NSDictionary* response = [NSDictionary dictionaryWithObjectsAndKeys:requestId, @"requestId", payload, @"responseObject", nil];
+        NSDictionary* response = [NSDictionary dictionaryWithObjectsAndKeys:requestId, @"requestId", returnData, @"responseObject", nil];
         [self succeeded:response];
     }
 }
@@ -719,10 +654,31 @@ typedef NSInteger SGFoursquareResponse;
 	[operationQueue addOperation:opertaion];			
 }
 
+- (NSMutableDictionary*) getLatLonParams:(CLLocationCoordinate2D)coordinate
+{
+    NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                   [NSString stringWithFormat:@"%f", coordinate.latitude], @"geolat",
+                                   [NSString stringWithFormat:@"%f", coordinate.longitude], @"geolon",
+                                   nil];
+    return params;
+}
+
+- (NSString*) getEncodedAuthString
+{
+    NSString* authString = [NSString stringWithFormat:@"%@:%@", username, password];
+    NSData* data = [authString dataUsingEncoding:NSUTF8StringEncoding];
+    
+    size_t size;
+    char* encodedString = NewBase64Encode([data bytes], [data length], NO, &size);
+    
+    return [NSString stringWithCString:encodedString encoding:NSUTF8StringEncoding];
+}
+
 - (void) dealloc
 {
     [password release];
     [username release];
+    [encodedAuthString release];
     
     [delegates release];
     [operationQueue release];
