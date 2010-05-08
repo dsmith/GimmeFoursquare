@@ -1,0 +1,85 @@
+// !$*UTF8*$!
+{
+	0867D690FE84028FC02AAC07 /* Project object */ = {
+		activeBuildConfigurationName = Debug;
+		activeTarget = D2AAC07D0554694100DB518D /* GimmeFoursquare */;
+		addToTargets = (
+			D2AAC07D0554694100DB518D /* GimmeFoursquare */,
+		);
+		codeSenseManager = 4AB27B561195F4D40074BEA7 /* Code sense */;
+		perUserDictionary = {
+			PBXConfiguration.PBXFileTableDataSource3.PBXFileTableDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					341,
+					20,
+					48.16259765625,
+					43,
+					43,
+					20,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+					PBXFileDataSource_Target_ColumnID,
+				);
+			};
+			PBXPerProjectTemplateStateSaveDate = 295040200;
+			PBXWorkspaceStateSaveDate = 295040200;
+		};
+		sourceControlManager = 4AB27B551195F4D40074BEA7 /* Source Control */;
+		userBuildSettings = {
+		};
+	};
+	4AB27B551195F4D40074BEA7 /* Source Control */ = {
+		isa = PBXSourceControlManager;
+		fallbackIsa = XCSourceControlManager;
+		isSCMEnabled = 0;
+		scmConfiguration = {
+			repositoryNamesForRoots = {
+				"" = "";
+			};
+		};
+	};
+	4AB27B561195F4D40074BEA7 /* Code sense */ = {
+		isa = PBXCodeSenseManager;
+		indexTemplatePath = "";
+	};
+	4AB27B571195F59B0074BEA7 /* SGGimmeFoursquare.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1048, 1482}}";
+			sepNavSelRange = "{3843, 0}";
+			sepNavVisRange = "{2040, 2354}";
+		};
+	};
+	4AB27B581195F59B0074BEA7 /* SGGimmeFoursquare.m */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1112, 10179}}";
+			sepNavSelRange = "{174, 0}";
+			sepNavVisRange = "{0, 1518}";
+		};
+	};
+	4AB27B651195F6750074BEA7 /* NSData+Base64.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1048, 703}}";
+			sepNavSelRange = "{0, 0}";
+			sepNavVisRange = "{0, 847}";
+		};
+	};
+	4AB27B661195F6750074BEA7 /* NSData+Base64.m */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1048, 3614}}";
+			sepNavSelRange = "{0, 0}";
+			sepNavVisRange = "{0, 2127}";
+		};
+	};
+	D2AAC07D0554694100DB518D /* GimmeFoursquare */ = {
+		activeExec = 0;
+	};
+}
