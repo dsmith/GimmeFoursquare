@@ -53,30 +53,16 @@
 	};
 	4AB27B571195F59B0074BEA7 /* SGGimmeFoursquare.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1048, 1482}}";
-			sepNavSelRange = "{3843, 0}";
-			sepNavVisRange = "{2040, 2354}";
+			sepNavIntBoundsRect = "{{0, 0}, {1048, 1794}}";
+			sepNavSelRange = "{73, 0}";
+			sepNavVisRange = "{2545, 2529}";
 		};
 	};
 	4AB27B581195F59B0074BEA7 /* SGGimmeFoursquare.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1112, 10179}}";
-			sepNavSelRange = "{174, 0}";
-			sepNavVisRange = "{0, 1518}";
-		};
-	};
-	4AB27B651195F6750074BEA7 /* NSData+Base64.h */ = {
-		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1048, 703}}";
-			sepNavSelRange = "{0, 0}";
-			sepNavVisRange = "{0, 847}";
-		};
-	};
-	4AB27B661195F6750074BEA7 /* NSData+Base64.m */ = {
-		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1048, 3614}}";
-			sepNavSelRange = "{0, 0}";
-			sepNavVisRange = "{0, 2127}";
+			sepNavIntBoundsRect = "{{0, 0}, {1048, 9555}}";
+			sepNavSelRange = "{24803, 0}";
+			sepNavVisRange = "{23856, 1846}";
 		};
 	};
 	D2AAC07D0554694100DB518D /* GimmeFoursquare */ = {

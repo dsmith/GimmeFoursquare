@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		4AB27B591195F59B0074BEA7 /* SGGimmeFoursquare.h in Headers */ = {isa = PBXBuildFile; fileRef = 4AB27B571195F59B0074BEA7 /* SGGimmeFoursquare.h */; };
 		4AB27B5A1195F59B0074BEA7 /* SGGimmeFoursquare.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27B581195F59B0074BEA7 /* SGGimmeFoursquare.m */; };
-		4AB27B671195F6750074BEA7 /* NSData+Base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 4AB27B651195F6750074BEA7 /* NSData+Base64.h */; };
-		4AB27B681195F6750074BEA7 /* NSData+Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27B661195F6750074BEA7 /* NSData+Base64.m */; };
 		4AB27BB31195F6E90074BEA7 /* CDataScanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 4AB27B961195F6E90074BEA7 /* CDataScanner.h */; };
 		4AB27BB41195F6E90074BEA7 /* CDataScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27B971195F6E90074BEA7 /* CDataScanner.m */; };
 		4AB27BB51195F6E90074BEA7 /* CDataScanner_Extensions.h in Headers */ = {isa = PBXBuildFile; fileRef = 4AB27B991195F6E90074BEA7 /* CDataScanner_Extensions.h */; };
@@ -25,6 +23,8 @@
 		4AB27BBE1195F6E90074BEA7 /* CJSONScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27BA31195F6E90074BEA7 /* CJSONScanner.m */; };
 		4AB27BBF1195F6E90074BEA7 /* CJSONSerializer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4AB27BA41195F6E90074BEA7 /* CJSONSerializer.h */; };
 		4AB27BC01195F6E90074BEA7 /* CJSONSerializer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27BA51195F6E90074BEA7 /* CJSONSerializer.m */; };
+		4AB27BCF1195F9060074BEA7 /* NSData+Base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 4AB27BCD1195F9060074BEA7 /* NSData+Base64.h */; };
+		4AB27BD01195F9060074BEA7 /* NSData+Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27BCE1195F9060074BEA7 /* NSData+Base64.m */; };
 		AA747D9F0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch */; };
 		AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };
 /* End PBXBuildFile section */
@@ -32,8 +32,6 @@
 /* Begin PBXFileReference section */
 		4AB27B571195F59B0074BEA7 /* SGGimmeFoursquare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SGGimmeFoursquare.h; sourceTree = "<group>"; };
 		4AB27B581195F59B0074BEA7 /* SGGimmeFoursquare.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SGGimmeFoursquare.m; sourceTree = "<group>"; };
-		4AB27B651195F6750074BEA7 /* NSData+Base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSData+Base64.h"; path = "../../Classes/NSData+Base64.h"; sourceTree = "<group>"; };
-		4AB27B661195F6750074BEA7 /* NSData+Base64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+Base64.m"; path = "../../Classes/NSData+Base64.m"; sourceTree = "<group>"; };
 		4AB27B961195F6E90074BEA7 /* CDataScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDataScanner.h; sourceTree = "<group>"; };
 		4AB27B971195F6E90074BEA7 /* CDataScanner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDataScanner.m; sourceTree = "<group>"; };
 		4AB27B991195F6E90074BEA7 /* CDataScanner_Extensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDataScanner_Extensions.h; sourceTree = "<group>"; };
@@ -48,6 +46,8 @@
 		4AB27BA31195F6E90074BEA7 /* CJSONScanner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CJSONScanner.m; sourceTree = "<group>"; };
 		4AB27BA41195F6E90074BEA7 /* CJSONSerializer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CJSONSerializer.h; sourceTree = "<group>"; };
 		4AB27BA51195F6E90074BEA7 /* CJSONSerializer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CJSONSerializer.m; sourceTree = "<group>"; };
+		4AB27BCD1195F9060074BEA7 /* NSData+Base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+Base64.h"; sourceTree = "<group>"; };
+		4AB27BCE1195F9060074BEA7 /* NSData+Base64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+Base64.m"; sourceTree = "<group>"; };
 		AA747D9E0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GimmeFoursquare_Prefix.pch; sourceTree = SOURCE_ROOT; };
 		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D2AAC07E0554694100DB518D /* libGimmeFoursquare.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGimmeFoursquare.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -121,8 +121,8 @@
 		4AB27B861195F6E90074BEA7 /* 3rd-Party */ = {
 			isa = PBXGroup;
 			children = (
-				4AB27B651195F6750074BEA7 /* NSData+Base64.h */,
-				4AB27B661195F6750074BEA7 /* NSData+Base64.m */,
+				4AB27BCD1195F9060074BEA7 /* NSData+Base64.h */,
+				4AB27BCE1195F9060074BEA7 /* NSData+Base64.m */,
 				4AB27B951195F6E90074BEA7 /* TouchJSON */,
 			);
 			path = "3rd-Party";
@@ -174,7 +174,6 @@
 			files = (
 				AA747D9F0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch in Headers */,
 				4AB27B591195F59B0074BEA7 /* SGGimmeFoursquare.h in Headers */,
-				4AB27B671195F6750074BEA7 /* NSData+Base64.h in Headers */,
 				4AB27BB31195F6E90074BEA7 /* CDataScanner.h in Headers */,
 				4AB27BB51195F6E90074BEA7 /* CDataScanner_Extensions.h in Headers */,
 				4AB27BB71195F6E90074BEA7 /* NSCharacterSet_Extensions.h in Headers */,
@@ -182,6 +181,7 @@
 				4AB27BBB1195F6E90074BEA7 /* CJSONDeserializer.h in Headers */,
 				4AB27BBD1195F6E90074BEA7 /* CJSONScanner.h in Headers */,
 				4AB27BBF1195F6E90074BEA7 /* CJSONSerializer.h in Headers */,
+				4AB27BCF1195F9060074BEA7 /* NSData+Base64.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,7 +229,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4AB27B5A1195F59B0074BEA7 /* SGGimmeFoursquare.m in Sources */,
-				4AB27B681195F6750074BEA7 /* NSData+Base64.m in Sources */,
 				4AB27BB41195F6E90074BEA7 /* CDataScanner.m in Sources */,
 				4AB27BB61195F6E90074BEA7 /* CDataScanner_Extensions.m in Sources */,
 				4AB27BB81195F6E90074BEA7 /* NSCharacterSet_Extensions.m in Sources */,
@@ -237,6 +236,7 @@
 				4AB27BBC1195F6E90074BEA7 /* CJSONDeserializer.m in Sources */,
 				4AB27BBE1195F6E90074BEA7 /* CJSONScanner.m in Sources */,
 				4AB27BC01195F6E90074BEA7 /* CJSONSerializer.m in Sources */,
+				4AB27BD01195F9060074BEA7 /* NSData+Base64.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
