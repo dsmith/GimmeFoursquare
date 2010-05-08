@@ -60,9 +60,10 @@
 	};
 	4AB27B581195F59B0074BEA7 /* SGGimmeFoursquare.m */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {1048, 9555}}";
-			sepNavSelRange = "{24803, 0}";
-			sepNavVisRange = "{23856, 1846}";
+			sepNavIntBoundsRect = "{{0, 0}, {1048, 9542}}";
+			sepNavSelRange = "{24326, 0}";
+			sepNavVisRange = "{23851, 1842}";
+			sepNavWindowFrame = "{{15, 251}, {1521, 922}}";
 		};
 	};
 	D2AAC07D0554694100DB518D /* GimmeFoursquare */ = {

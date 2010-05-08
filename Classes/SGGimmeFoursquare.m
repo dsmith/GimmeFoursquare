@@ -711,7 +711,6 @@ typedef NSInteger SGFoursquareResponse;
     
     NSString* arg;
 	for(int i = 0; i < [args count]; i++) {
-        
         arg = [args objectAtIndex:i];
 		[httpRequestInvocation setArgument:&arg atIndex:i + 2];
     }

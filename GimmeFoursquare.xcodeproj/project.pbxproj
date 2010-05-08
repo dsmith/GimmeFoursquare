@@ -25,6 +25,8 @@
 		4AB27BC01195F6E90074BEA7 /* CJSONSerializer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27BA51195F6E90074BEA7 /* CJSONSerializer.m */; };
 		4AB27BCF1195F9060074BEA7 /* NSData+Base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 4AB27BCD1195F9060074BEA7 /* NSData+Base64.h */; };
 		4AB27BD01195F9060074BEA7 /* NSData+Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27BCE1195F9060074BEA7 /* NSData+Base64.m */; };
+		4AB27BD51195F98A0074BEA7 /* TestGimmeFoursquare.h in Headers */ = {isa = PBXBuildFile; fileRef = 4AB27BD31195F98A0074BEA7 /* TestGimmeFoursquare.h */; };
+		4AB27BD61195F98A0074BEA7 /* TestGimmeFoursquare.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27BD41195F98A0074BEA7 /* TestGimmeFoursquare.m */; };
 		AA747D9F0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch */; };
 		AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };
 /* End PBXBuildFile section */
@@ -48,6 +50,8 @@
 		4AB27BA51195F6E90074BEA7 /* CJSONSerializer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CJSONSerializer.m; sourceTree = "<group>"; };
 		4AB27BCD1195F9060074BEA7 /* NSData+Base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+Base64.h"; sourceTree = "<group>"; };
 		4AB27BCE1195F9060074BEA7 /* NSData+Base64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+Base64.m"; sourceTree = "<group>"; };
+		4AB27BD31195F98A0074BEA7 /* TestGimmeFoursquare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestGimmeFoursquare.h; sourceTree = "<group>"; };
+		4AB27BD41195F98A0074BEA7 /* TestGimmeFoursquare.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestGimmeFoursquare.m; sourceTree = "<group>"; };
 		AA747D9E0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GimmeFoursquare_Prefix.pch; sourceTree = SOURCE_ROOT; };
 		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D2AAC07E0554694100DB518D /* libGimmeFoursquare.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGimmeFoursquare.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -76,6 +80,7 @@
 		0867D691FE84028FC02AAC07 /* GimmeFoursquare */ = {
 			isa = PBXGroup;
 			children = (
+				4AB27BD21195F97D0074BEA7 /* Tests */,
 				4AB27B851195F6E90074BEA7 /* Resources */,
 				08FB77AEFE84172EC02AAC07 /* Classes */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
@@ -165,6 +170,15 @@
 			path = JSON;
 			sourceTree = "<group>";
 		};
+		4AB27BD21195F97D0074BEA7 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				4AB27BD31195F98A0074BEA7 /* TestGimmeFoursquare.h */,
+				4AB27BD41195F98A0074BEA7 /* TestGimmeFoursquare.m */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -182,6 +196,7 @@
 				4AB27BBD1195F6E90074BEA7 /* CJSONScanner.h in Headers */,
 				4AB27BBF1195F6E90074BEA7 /* CJSONSerializer.h in Headers */,
 				4AB27BCF1195F9060074BEA7 /* NSData+Base64.h in Headers */,
+				4AB27BD51195F98A0074BEA7 /* TestGimmeFoursquare.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -237,6 +252,7 @@
 				4AB27BBE1195F6E90074BEA7 /* CJSONScanner.m in Sources */,
 				4AB27BC01195F6E90074BEA7 /* CJSONSerializer.m in Sources */,
 				4AB27BD01195F9060074BEA7 /* NSData+Base64.m in Sources */,
+				4AB27BD61195F98A0074BEA7 /* TestGimmeFoursquare.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
