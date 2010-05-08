@@ -54,6 +54,7 @@
 		4AB27BD31195F98A0074BEA7 /* TestGimmeFoursquare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestGimmeFoursquare.h; sourceTree = "<group>"; };
 		4AB27BD41195F98A0074BEA7 /* TestGimmeFoursquare.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestGimmeFoursquare.m; sourceTree = "<group>"; };
 		4AB27C4711961C370074BEA7 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Developer/Library/Frameworks/SenTestingKit.framework; sourceTree = SDKROOT; };
+		4AB27C5811961DD20074BEA7 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		AA747D9E0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GimmeFoursquare_Prefix.pch; sourceTree = SOURCE_ROOT; };
 		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D2AAC07E0554694100DB518D /* libGimmeFoursquare.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGimmeFoursquare.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -83,6 +84,7 @@
 		0867D691FE84028FC02AAC07 /* GimmeFoursquare */ = {
 			isa = PBXGroup;
 			children = (
+				4AB27C5811961DD20074BEA7 /* README */,
 				4AB27BD21195F97D0074BEA7 /* Tests */,
 				4AB27B851195F6E90074BEA7 /* Resources */,
 				08FB77AEFE84172EC02AAC07 /* Classes */,

@@ -134,7 +134,7 @@ typedef NSInteger SGFoursquareResponse;
             
             return YES;
         }
-        
+
     }
     
     return NO;
