@@ -39,17 +39,22 @@
 
 @interface SGGimmeFoursquare : NSObject {
 
-    @private
     NSString* username;
     NSString* password;
+
+    @private
     NSString* encodedAuthString;
     
     NSOperationQueue* operationQueue;
     
     NSMutableArray* delegates;
+    
+    NSString* validateUser;
 }
 
-@property (nonatomic, readonly) NSOperationQueue* operationQueue;
+@property (nonatomic, retain) NSOperationQueue* operationQueue;
+@property (nonatomic, readonly) NSString* username;
+@property (nonatomic, readonly) NSString* password;
 
 + (SGGimmeFoursquare*) sharedGimmeFoursquare;
 + (void) setSharedGimmeFoursquare:(SGGimmeFoursquare*)gimmeFoursquare;
