@@ -28,7 +28,7 @@
 		4AB27BD51195F98A0074BEA7 /* TestGimmeFoursquare.h in Headers */ = {isa = PBXBuildFile; fileRef = 4AB27BD31195F98A0074BEA7 /* TestGimmeFoursquare.h */; };
 		4AB27BD61195F98A0074BEA7 /* TestGimmeFoursquare.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27BD41195F98A0074BEA7 /* TestGimmeFoursquare.m */; };
 		4AB27C4811961C370074BEA7 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AB27C4711961C370074BEA7 /* SenTestingKit.framework */; };
-		AA747D9F0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch */; };
+		4AED799811D6CAE800318263 /* SGGimmeFoursquare_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 4AED799711D6CAE800318263 /* SGGimmeFoursquare_Prefix.pch */; };
 		AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };
 /* End PBXBuildFile section */
 
@@ -55,9 +55,9 @@
 		4AB27BD41195F98A0074BEA7 /* TestGimmeFoursquare.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestGimmeFoursquare.m; sourceTree = "<group>"; };
 		4AB27C4711961C370074BEA7 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Developer/Library/Frameworks/SenTestingKit.framework; sourceTree = SDKROOT; };
 		4AB27C5811961DD20074BEA7 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
-		AA747D9E0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GimmeFoursquare_Prefix.pch; sourceTree = SOURCE_ROOT; };
+		4AED799711D6CAE800318263 /* SGGimmeFoursquare_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SGGimmeFoursquare_Prefix.pch; sourceTree = "<group>"; };
 		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		D2AAC07E0554694100DB518D /* libGimmeFoursquare.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGimmeFoursquare.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2AAC07E0554694100DB518D /* libSGGimmeFoursquare.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSGGimmeFoursquare.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,7 +76,7 @@
 		034768DFFF38A50411DB9C8B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D2AAC07E0554694100DB518D /* libGimmeFoursquare.a */,
+				D2AAC07E0554694100DB518D /* libSGGimmeFoursquare.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -116,7 +116,7 @@
 		32C88DFF0371C24200C91783 /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
-				AA747D9E0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch */,
+				4AED799711D6CAE800318263 /* SGGimmeFoursquare_Prefix.pch */,
 			);
 			name = "Other Sources";
 			sourceTree = "<group>";
@@ -192,7 +192,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA747D9F0F9514B9006C5449 /* GimmeFoursquare_Prefix.pch in Headers */,
 				4AB27B591195F59B0074BEA7 /* SGGimmeFoursquare.h in Headers */,
 				4AB27BB31195F6E90074BEA7 /* CDataScanner.h in Headers */,
 				4AB27BB51195F6E90074BEA7 /* CDataScanner_Extensions.h in Headers */,
@@ -203,15 +202,16 @@
 				4AB27BBF1195F6E90074BEA7 /* CJSONSerializer.h in Headers */,
 				4AB27BCF1195F9060074BEA7 /* NSData+Base64.h in Headers */,
 				4AB27BD51195F98A0074BEA7 /* TestGimmeFoursquare.h in Headers */,
+				4AED799811D6CAE800318263 /* SGGimmeFoursquare_Prefix.pch in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		D2AAC07D0554694100DB518D /* GimmeFoursquare */ = {
+		D2AAC07D0554694100DB518D /* SGGimmeFoursquare */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1DEB921E08733DC00010E9CD /* Build configuration list for PBXNativeTarget "GimmeFoursquare" */;
+			buildConfigurationList = 1DEB921E08733DC00010E9CD /* Build configuration list for PBXNativeTarget "SGGimmeFoursquare" */;
 			buildPhases = (
 				D2AAC07A0554694100DB518D /* Headers */,
 				D2AAC07B0554694100DB518D /* Sources */,
@@ -221,9 +221,9 @@
 			);
 			dependencies = (
 			);
-			name = GimmeFoursquare;
+			name = SGGimmeFoursquare;
 			productName = GimmeFoursquare;
-			productReference = D2AAC07E0554694100DB518D /* libGimmeFoursquare.a */;
+			productReference = D2AAC07E0554694100DB518D /* libSGGimmeFoursquare.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -231,7 +231,7 @@
 /* Begin PBXProject section */
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
-			buildConfigurationList = 1DEB922208733DC00010E9CD /* Build configuration list for PBXProject "GimmeFoursquare" */;
+			buildConfigurationList = 1DEB922208733DC00010E9CD /* Build configuration list for PBXProject "SGGimmeFoursquare" */;
 			compatibilityVersion = "Xcode 3.1";
 			hasScannedForEncodings = 1;
 			mainGroup = 0867D691FE84028FC02AAC07 /* GimmeFoursquare */;
@@ -239,7 +239,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D2AAC07D0554694100DB518D /* GimmeFoursquare */,
+				D2AAC07D0554694100DB518D /* SGGimmeFoursquare */,
 			);
 		};
 /* End PBXProject section */
@@ -281,9 +281,9 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = GimmeFoursquare_Prefix.pch;
+				GCC_PREFIX_HEADER = SGGimmeFoursquare_Prefix.pch;
 				INSTALL_PATH = /usr/local/lib;
-				PRODUCT_NAME = GimmeFoursquare;
+				PRODUCT_NAME = SGGimmeFoursquare;
 			};
 			name = Debug;
 		};
@@ -299,9 +299,9 @@
 				);
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = GimmeFoursquare_Prefix.pch;
+				GCC_PREFIX_HEADER = SGGimmeFoursquare_Prefix.pch;
 				INSTALL_PATH = /usr/local/lib;
-				PRODUCT_NAME = GimmeFoursquare;
+				PRODUCT_NAME = SGGimmeFoursquare;
 			};
 			name = Release;
 		};
@@ -335,7 +335,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB921E08733DC00010E9CD /* Build configuration list for PBXNativeTarget "GimmeFoursquare" */ = {
+		1DEB921E08733DC00010E9CD /* Build configuration list for PBXNativeTarget "SGGimmeFoursquare" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB921F08733DC00010E9CD /* Debug */,
@@ -344,7 +344,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1DEB922208733DC00010E9CD /* Build configuration list for PBXProject "GimmeFoursquare" */ = {
+		1DEB922208733DC00010E9CD /* Build configuration list for PBXProject "SGGimmeFoursquare" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB922308733DC00010E9CD /* Debug */,
