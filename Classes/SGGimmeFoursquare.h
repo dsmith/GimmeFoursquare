@@ -35,110 +35,116 @@
 #import <Foundation/Foundation.h>
 #import <CoreLocation/CoreLocation.h>
 
-@protocol SGGimmeFoursquareDelegate;
+#import "OAToken.h"
+#import "OAConsumer.h"
+
+@interface SGCallback : NSObject
+{
+    @private
+    id delegate;
+    SEL successMethod;
+    SEL failureMethod;
+}
+
+@property (nonatomic, readonly) id delegate;
+@property (nonatomic, readonly) SEL successMethod;
+@property (nonatomic, readonly) SEL failureMethod;
+
+- (id) initWithDelegate:(id)delegate successMethod:(SEL)method failureMethod:(SEL)method;
+
+@end
 
 @interface SGGimmeFoursquare : NSObject {
 
-    NSString* username;
-    NSString* password;
+    OAConsumer* consumerToken;
 
     @private
-    NSString* encodedAuthString;
-    
-    NSOperationQueue* operationQueue;
-    
-    NSMutableArray* delegates;
-    
-    NSString* validateUser;
+    OAToken* requestToken;
+    OAToken* accessToken;
+
 }
 
-@property (nonatomic, retain) NSOperationQueue* operationQueue;
-@property (nonatomic, readonly) NSString* username;
-@property (nonatomic, readonly) NSString* password;
+@property (nonatomic, readonly) OAConsumer* consumer;
 
-+ (SGGimmeFoursquare*) sharedGimmeFoursquare;
-+ (void) setSharedGimmeFoursquare:(SGGimmeFoursquare*)gimmeFoursquare;
-
-- (void) addDelegate:(id<SGGimmeFoursquareDelegate>)delegate;
-- (void) removeDelegate:(id<SGGimmeFoursquareDelegate>)delegate;
+// The key/secret pair should be your consumer key and secret that 
+// you were issued when you registered your application with Foursquare.
+- (id) initWithKey:(NSString*)key secret:(NSString*)secret;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Validation methods 
+#pragma mark OAuth methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (BOOL) resumeSesssion;
-- (void) clearSession;
-- (NSString*) validateUsername:(NSString*)username password:(NSString*)password;
+// Fetches the access token. Upon a successful request,
+// the class will send the user to the mobile authenticate page
+// using the SGAuthorizeWebViewController.
+- (void) getOAuthAccessToken;
+
+// Once the application recieves a valid request from the callback
+// URL that is registered with Foursquare, this method should be called
+// so we can begin to make requests to Foursquare's API.
+- (void) getOAuthRequestToken;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Geo methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) activeCities; 
-- (NSString*) closestCityToCoordinate:(CLLocationCoordinate2D)coordinate cityId:(NSString*)cityId;
-- (NSString*) updateDefaultCity:(NSString*)cityId;
+- (void) activeCitiesCallback:(SGCallback*)callback;
+- (void) closestCityToCoordinate:(CLLocationCoordinate2D)coordinate cityId:(NSString*)cityId callback:(SGCallback*)callback;
+- (void) updateDefaultCity:(NSString*)cityId callback:(SGCallback*)callback;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Check in methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) checkIns:(NSString*)cityId;
-- (NSString*) shoutMessage:(NSString*)message coordinate:(CLLocationCoordinate2D)coordinate twitter:(BOOL)enabled;
-- (NSString*) checkIntoVenue:(NSString*)venueId coordinate:(CLLocationCoordinate2D)coordinate;
+- (void) checkIns:(NSString*)cityId callback:(SGCallback*)callback;
+- (void) shoutMessage:(NSString*)message coordinate:(CLLocationCoordinate2D)coordinate twitter:(BOOL)enabled callback:(SGCallback*)callback;
+- (void) checkIntoVenue:(NSString*)venueId coordinate:(CLLocationCoordinate2D)coordinate callback:(SGCallback*)callback;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark User methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) userInformation:(NSString*)userId badges:(BOOL)badges mayor:(BOOL)mayor;
-- (NSString*) historySince:(NSString*)sinceid limit:(int)limit;
-- (NSString*) friends:(NSString*)uid;
+- (void) userInformation:(NSString*)userId badges:(BOOL)badges mayor:(BOOL)mayor callback:(SGCallback*)callback;
+- (void) historySince:(NSString*)sinceid limit:(int)limit callback:(SGCallback*)callback;
+- (void) friends:(NSString*)uid callback:(SGCallback*)callback;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Venue methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) venuesNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(int)limit keyword:(NSString*)keyword;
-- (NSString*) venueInformation:(NSString*)vid;
-- (NSString*) addVenue:(NSString*)vid addressDictionary:(NSDictionary*)addressDictionary;
-- (NSString*) editVenue:(NSString*)vid addressDictionary:(NSDictionary*)addressDictionary;
-- (NSString*) venueClosed:(NSString*)vid;
+- (void) venuesNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(int)limit keyword:(NSString*)keyword callback:(SGCallback*)callback;
+- (void) venueInformation:(NSString*)vid callback:(SGCallback*)callback;
+- (void) addVenue:(NSString*)vid addressDictionary:(NSDictionary*)addressDictionary callback:(SGCallback*)callback;
+- (void) editVenue:(NSString*)vid addressDictionary:(NSDictionary*)addressDictionary callback:(SGCallback*)callback;
+- (void) venueClosed:(NSString*)vid callback:(SGCallback*)callback;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Tips methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) tipsNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(NSInteger)limit;
-- (NSString*) addTipToVenue:(NSString*)vid tip:(NSString*)tip type:(NSString*)type;
-- (NSString*) markTipAsToDo:(NSString*)tid;
-- (NSString*) markTipAsDone:(NSString*)tid;
-- (NSString*) unmarkTip:(NSString*)tid;
+- (void) tipsNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(NSInteger)limit callback:(SGCallback*)callback;
+- (void) addTipToVenue:(NSString*)vid tip:(NSString*)tip type:(NSString*)type callback:(SGCallback*)callback;
+- (void) markTipAsToDo:(NSString*)tid callback:(SGCallback*)callback;
+- (void) markTipAsDone:(NSString*)tid callback:(SGCallback*)callback;
+- (void) unmarkTip:(NSString*)tid callback:(SGCallback*)callback;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
 #pragma mark Friends methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) pendingFriendRequests;
-- (NSString*) approveFriendRequest:(NSString*)uid;
-- (NSString*) denyFriendRequest:(NSString*)uid;
-- (NSString*) sendFriendRequest:(NSString*)uid;
-- (NSString*) findFriendsViaName:(NSString*)keyword;
-- (NSString*) findFriendsViaTwitter:(NSString*)keyword;
-- (NSString*) findFriendsViaPhone:(NSString*)keyword;
+- (void) pendingFriendRequestsCallback:(SGCallback*)callback;
+- (void) approveFriendRequest:(NSString*)uid callback:(SGCallback*)callback;
+- (void) denyFriendRequest:(NSString*)uid callback:(SGCallback*)callback;
+- (void) sendFriendRequest:(NSString*)uid callback:(SGCallback*)callback;
+- (void) findFriendsViaName:(NSString*)keyword callback:(SGCallback*)callback;
+- (void) findFriendsViaTwitter:(NSString*)keyword callback:(SGCallback*)callback;
+- (void) findFriendsViaPhone:(NSString*)keyword callback:(SGCallback*)callback;
 
 @end
-
-@protocol SGGimmeFoursquareDelegate
-
-- (void) fourSquare:(SGGimmeFoursquare*)fourSquare requestSucceeded:(NSString*)requestId responseObject:(id)responseObject;
-- (void) fourSquare:(SGGimmeFoursquare*)fourSquare requestFailed:(NSString*)requestId error:(NSError*)error;
-
-@end
-

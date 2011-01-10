@@ -33,128 +33,136 @@
 //
 
 #import "SGGimmeFoursquare.h"
+#import "SGAuthorizeWebViewController.h"
 
-#import "NSData+Base64.h"
 #import "NSDictionary_JSONExtensions.h"
 #import "NSStringAdditions.h"
 
-static SGGimmeFoursquare* sharedGimmeFoursquare = nil;
-static int responseIdNumber = 0;
+#import "OAServiceTicket.h"
+#import "OAToken.h"
+#import "OADataFetcher.h"
 
-static NSString* foursquareURL = @"http://api.foursquare.com/v1";
+static NSString* foursquareURL = @"http://api.foursquare.com/v2";
 
-typedef NSInteger SGFoursquareResponse;
+@interface SGGimmeFoursquare (Private)
 
-@interface SGGimmeFoursquare (Private) <SGGimmeFoursquareDelegate>
+- (void) sendHTTPRequest:(NSString*)type 
+                   toURL:(NSString*)url
+              withParams:(NSDictionary*)httpBody 
+                callback:(SGCallback*)callback;
 
-- (void) sendHTTPRequest:(NSString*)type toURL:(NSString*)url withParams:(NSDictionary*)httpBody requestId:(NSString*)requestId;
-- (void) pushInvocationWithArgs:(NSArray*)args;
-
-- (NSString*) getNextRequestId;
-
-- (NSString*) getEncodedAuthString;
 - (NSMutableDictionary*) getLatLonParams:(CLLocationCoordinate2D)coordinate;
 
 - (NSString*) normalizeRequestParams:(NSDictionary*)params;
 
-- (NSString*) _updateStatus:(NSString*)status ofTip:(NSString*)tid;
-- (NSString*) _updateFriendRequest:(NSString*)uid status:(NSString*)status;
-- (NSString*) _findFriends:(NSString*)keyword byMedium:(NSString*)meduim;
+- (void) _updateStatus:(NSString*)status ofTip:(NSString*)tid callback:(SGCallback*)callback;
+- (void) _updateFriendRequest:(NSString*)uid status:(NSString*)status callback:(SGCallback*)callback;
+- (void) _findFriends:(NSString*)keyword byMedium:(NSString*)meduim callback:(SGCallback*)callback;
 
 @end
 
 @implementation SGGimmeFoursquare
-@synthesize operationQueue, username, password;
+@synthesize consumer;
 
-- (id) init
+- (id) initWithKey:(NSString*)key secret:(NSString*)secret
 {
     if(self = [super init]) {
-        username = nil;
-        password = nil;
-        validateUser = nil;
-        
-        delegates = [[NSMutableArray alloc] init];
-        operationQueue = [[NSOperationQueue alloc] init];
-        [operationQueue setMaxConcurrentOperationCount:1];
+        consumer = [[OAConsumer alloc] initWithKey:key secret:secret];
     }
     
     return self;
 }
 
-+ (SGGimmeFoursquare*) sharedGimmeFoursquare
-{
-    if(!sharedGimmeFoursquare) 
-        sharedGimmeFoursquare = [[SGGimmeFoursquare alloc] init];
-    
-    [sharedGimmeFoursquare resumeSesssion];
-    
-    return sharedGimmeFoursquare;
-}
-
-+ (void) setSharedGimmeFoursquare:(SGGimmeFoursquare*)gimmeFoursquare
-{
-    if(sharedGimmeFoursquare)
-        [sharedGimmeFoursquare release];
-    
-    sharedGimmeFoursquare = [gimmeFoursquare retain];
-}
-
-- (void) addDelegate:(id<SGGimmeFoursquareDelegate>)delegate
-{
-    [delegates addObject:delegate];
-}
-
-- (void) removeDelegate:(id<SGGimmeFoursquareDelegate>)delegate
-{
-    [delegates removeObject:delegate];
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -
-#pragma mark Validation methods 
+#pragma mark OAuth 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (BOOL) resumeSesssion
-{
-    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
- 
-    NSString* cachedUsername = [defaults stringForKey:@"SGFoursquare_Username"];
-    NSString* cachedPassword = [defaults stringForKey:@"SGFoursquare_Password"];
+- (void) getOAuthRequestToken
+{    
+    OAMutableURLRequest* request = [[OAMutableURLRequest alloc] initWithURL:[NSURL URLWithString:@"http://foursquare.com/oauth/request_token"]
+                                                                   consumer:consumer
+                                                                      token:nil
+                                                                      realm:nil
+                                                          signatureProvider:nil];
+    
+    OADataFetcher* fetcher = [[[OADataFetcher alloc] init] autorelease];
+    [fetcher fetchDataWithRequest:request delegate:self didFinishSelector:@selector(requestTokenTicket:didFinishWithData:) didFailSelector:@selector(requestTokenTicket:didFailWithError:)];
+}
 
-    if(cachedPassword && ![cachedPassword isEqualToString:@""] && 
-            cachedUsername && ![cachedUsername isEqualToString:@""]) {
- 
-        username = cachedUsername;
-        password = cachedPassword;
+- (void) requestTokenTicket:(OAServiceTicket*)ticket didFinishWithData:(NSData*)data
+{
+    if (ticket.didSucceed) {
+        NSString* responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        requestToken = [[OAToken alloc] initWithHTTPResponseBody:responseBody];
+        NSUserDefaults* standardUserDefaults = (NSUserDefaults *)[NSUserDefaults standardUserDefaults];
+        [standardUserDefaults setObject:requestToken.key forKey:@"requestTokenKey"];
+        [standardUserDefaults setObject:requestToken.secret forKey:@"requestTokenSecret"];        
+        [responseBody release];
         
-        encodedAuthString = [[self getEncodedAuthString] retain];
-        
-        return YES;
+        // Update this code if you do not want the default
+        // behavior after a request token has been recieved.
+        SGAuthorizeWebViewController* webViewController = [[SGAuthorizeWebViewController alloc] init];
+        UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController:webViewController];
+
+        UIWindow* window = [[UIApplication sharedApplication] keyWindow];
+        [UIView beginAnimations:@"authorize_web_page" context:nil];
+        [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:window cache:NO];
+        [UIView setAnimationDuration:1.5];
+        [window addSubview:navigationController.view];
+        [UIView commitAnimations];
+    } else {
+        NSString* responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];   
+        NSLog(@"SGGimmeFoursquare - Request Token Failed: %@", responseBody);
     }
+}
+
+- (void) requestTokenTicket:(OAServiceTicket*)ticket didFailWithError:(NSError*)error
+{
+    NSLog(@"SGGimmeFoursquare - Request Token Failed: %@", error);
+}
+
+- (void) getOAuthAccessToken
+{
+    NSURL* url = [NSURL URLWithString:@"http://foursquare.com/oauth/access_token"];
     
-    return NO;
+    OAToken* token = [[OAToken alloc] initWithKey:[[NSUserDefaults standardUserDefaults] stringForKey:@"requestTokenKey"] 
+                                           secret:[[NSUserDefaults standardUserDefaults] stringForKey:@"requestTokenSecret"]];
+    
+    OAMutableURLRequest* request = [[OAMutableURLRequest alloc] initWithURL:url
+                                                                   consumer:consumer
+                                                                      token:token
+                                                                      realm:nil
+                                                          signatureProvider:nil];
+    
+    OADataFetcher* fetcher = [[[OADataFetcher alloc] init] autorelease];
+    [request setHTTPMethod:@"GET"];    
+    [fetcher fetchDataWithRequest:request
+                         delegate:self 
+                didFinishSelector:@selector(requestAccessTokenTicket:didFinishWithData:)
+                  didFailSelector:@selector(requestAccessTokenTicket:didFailWithError:)];
 }
 
-- (void) clearSession
+- (void) requestAccessTokenTicket:(OAServiceTicket*)ticket didFailWithError:(NSError*)error
 {
-    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:@"" forKey:@"SGFoursquare_Username"];
-    [defaults setObject:@"" forKey:@"SGFoursquare_Password"];
-    [defaults setObject:@"" forKey:@"SGFoursquare_UserId"];
+    NSLog(@"SGGimmeFoursquare - Request Access Token Failed: %@", error);
 }
 
-- (NSString*) validateUsername:(NSString*)name password:(NSString*)pw
-{
-    username = name;
-    password = pw;
+- (void) requestAccessTokenTicket:(OAServiceTicket*)ticket didFinishWithData:(NSData*)data
+{    
+    if(ticket.didSucceed) {
+        NSString* responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
         
-    encodedAuthString = [[self getEncodedAuthString] retain];
-    
-    NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:name forKey:@"SGFoursquare_Username"];
-    [defaults setObject:pw forKey:@"SGFoursquare_Password"];
-    
-    return [self userInformation:nil badges:NO mayor:NO];
+        accessToken = [[OAToken alloc] initWithHTTPResponseBody:responseBody];
+        [responseBody release];
+        
+        NSUserDefaults* standardUserDefaults = [NSUserDefaults standardUserDefaults];
+        [standardUserDefaults setObject:accessToken.key forKey:@"accessTokenKey"];
+        [standardUserDefaults setObject:accessToken.secret forKey:@"accessTokenSecret"];
+    } else {
+        NSString* responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+        NSLog(@"SGGimmeFoursquare - Request Access Token Failed: %@", responseBody);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,51 +170,32 @@ typedef NSInteger SGFoursquareResponse;
 #pragma mark Geo methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) activeCities
+- (void) activeCitiesCallback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];    
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     @"/cities.json",
-                     [NSNull null],
-                     responseId,
-                     nil];
-    
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    [self sendHTTPRequest:@"GET"
+                    toURL:@"/cities"
+               withParams:nil
+                 callback:callback];
 }
 
-- (NSString*) closestCityToCoordinate:(CLLocationCoordinate2D)coordinate cityId:(NSString*)cityId
+- (void) closestCityToCoordinate:(CLLocationCoordinate2D)coordinate cityId:(NSString*)cityId callback:(SGCallback*)callback
 {
     NSMutableDictionary* params = [self getLatLonParams:coordinate];
-    NSString* responseId = [self getNextRequestId];
     if(cityId)
         [params setObject:cityId forKey:@"cityid"];
-    
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                        @"/checkcity",
-                        params,
-                     responseId,
-                        nil];
-    
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    [self sendHTTPRequest:@"GET"
+                    toURL:@"/checkcity"
+               withParams:params
+                 callback:callback];
 }
 
-- (NSString*) updateDefaultCity:(NSString*)cityId
+- (void) updateDefaultCity:(NSString*)cityId callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
-    NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:cityId, @"cityid", nil];
-    NSArray* args = [NSArray arrayWithObjects:@"POST",
-                        @"/switchcity",
-                        params,
-                     responseId,
-                        nil];
-    
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:cityId, @"cityid", nil];    
+    [self sendHTTPRequest:@"POST"
+                    toURL:@"/switchcity"
+               withParams:params
+                 callback:callback];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -214,54 +203,35 @@ typedef NSInteger SGFoursquareResponse;
 #pragma mark Check in methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) checkIns:(NSString*)cityId
+- (void) checkIns:(NSString*)cityId callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];    
-    NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:cityId, @"cityid", nil];
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                        @"/checkins",
-                        params,
-                     responseId,
-                        nil];
-    
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:cityId, @"cityid", nil];    
+    [self sendHTTPRequest:@"GET"
+                    toURL:@"/checkins"
+               withParams:params
+                 callback:callback];
 }
 
-- (NSString*) shoutMessage:(NSString*)message coordinate:(CLLocationCoordinate2D)coordinate twitter:(BOOL)enabled
+- (void) shoutMessage:(NSString*)message coordinate:(CLLocationCoordinate2D)coordinate twitter:(BOOL)enabled callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
     NSMutableDictionary* params = [self getLatLonParams:coordinate];
     [params setObject:[NSString stringWithFormat:@"%i", enabled] forKey:@"twitter"];
     [params setObject:message forKey:@"shout"];
-    
-    NSArray* args = [NSArray arrayWithObjects:@"POST",
-                        @"/checkin",
-                        params,
-                     responseId,
-                        nil];
-    
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    [self sendHTTPRequest:@"POST"
+                    toURL:@"/checkin"
+               withParams:params
+                 callback:callback];
 }
 
-- (NSString*) checkIntoVenue:(NSString*)vid coordinate:(CLLocationCoordinate2D)coord
+- (void) checkIntoVenue:(NSString*)vid coordinate:(CLLocationCoordinate2D)coord callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
     NSMutableDictionary* params = [self getLatLonParams:coord];
     [params setObject:vid forKey:@"vid"];
     
-    NSArray* args = [NSArray arrayWithObjects:@"POST",
-                            @"/checkin",
-                            params,
-                            responseId,
-                            nil];
-    
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    [self sendHTTPRequest:@"POST"
+                    toURL:@"/checkin"
+               withParams:params
+                 callback:callback];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -269,9 +239,8 @@ typedef NSInteger SGFoursquareResponse;
 #pragma mark User methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) userInformation:(NSString*)userId badges:(BOOL)badges mayor:(BOOL)mayor
+- (void) userInformation:(NSString*)userId badges:(BOOL)badges mayor:(BOOL)mayor callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];    
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                    [NSString stringWithFormat:@"%i", badges], @"badges",
                                    [NSString stringWithFormat:@"%i", badges], @"mayor",
@@ -279,20 +248,14 @@ typedef NSInteger SGFoursquareResponse;
     if(userId)
         [params setObject:userId forKey:@"uid"];
 
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     @"/user",
-                     params,
-                     responseId,
-                     nil];
-    
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    [self sendHTTPRequest:@"GET"
+                    toURL:@"/user"
+               withParams:params
+                 callback:callback];
 }
 
-- (NSString*) historySince:(NSString*)sinceid limit:(int)limit
+- (void) historySince:(NSString*)sinceid limit:(int)limit callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];    
     NSMutableDictionary* params = [NSMutableDictionary dictionary];
     
     if(sinceid)
@@ -301,33 +264,22 @@ typedef NSInteger SGFoursquareResponse;
     if(limit > 0)
         [params setObject:[NSString stringWithFormat:@"%i", limit] forKey:@"l"];
     
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     @"history",
-                     params,
-                     responseId,
-                     nil];
-    
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    [self sendHTTPRequest:@"GET"
+                    toURL:@"/history"
+               withParams:params
+                 callback:callback];
 }
 
-- (NSString*) friends:(NSString*)uid
+- (void) friends:(NSString*)uid callback:(SGCallback*)callback
 {
     NSMutableDictionary* params = [NSMutableDictionary dictionary];
-    NSString* responseId = [self getNextRequestId];
     if(uid)
         [params setObject:uid forKey:@"uid"];
     
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     @"friends",
-                     params,
-                     responseId,
-                     nil];
-    
-    [self pushInvocationWithArgs:args];    
-    
-    return responseId;
+    [self sendHTTPRequest:@"GET"
+                    toURL:@"/friends"
+               withParams:params
+                 callback:callback];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -335,90 +287,59 @@ typedef NSInteger SGFoursquareResponse;
 #pragma mark Venue methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) venuesNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(int)limit keyword:(NSString*)keyword;
+- (void) venuesNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(int)limit keyword:(NSString*)keyword callback:(SGCallback*)callback
 {
     NSMutableDictionary* params = [self getLatLonParams:coordinate];
-    NSString* responseId = [self getNextRequestId];
     if(limit > 0)
         [params setObject:[NSString stringWithFormat:@"%i", limit] forKey:@"l"];
     
     if(keyword)
         [params setObject:keyword forKey:@"q"];
     
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                        @"/venues",
-                        params,
-                     responseId,
-                        nil];
-    
-    [self pushInvocationWithArgs:args];    
-    
-    return responseId;
+    [self sendHTTPRequest:@"GET"
+                    toURL:@"/venues"
+               withParams:params
+                 callback:callback];
 }
 
-- (NSString*) venueInformation:(NSString*)vid
+- (void) venueInformation:(NSString*)vid callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
     NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:vid, @"vid", nil];
-    
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                        @"/venue",
-                        params,
-                        responseId,
-                        nil];
-    
-    [self pushInvocationWithArgs:args];    
-    
-    return responseId;
+
+    [self sendHTTPRequest:@"GET"
+                    toURL:@"/venue"
+               withParams:params
+                 callback:callback];
 }
 
-- (NSString*) addVenue:(NSString*)name addressDictionary:(NSDictionary*)addressDictionary
+- (void) addVenue:(NSString*)name addressDictionary:(NSDictionary*)addressDictionary callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
     NSMutableDictionary* params = [NSDictionary dictionaryWithDictionary:addressDictionary];
     [params setObject:name forKey:@"vid"];
     
-    NSArray* args = [NSArray arrayWithObjects:@"POST",
-                     @"/addvenue",
-                     params,
-                     responseId,
-                     nil];
-    
-    [self pushInvocationWithArgs:args]; 
-    
-    return responseId;
+    [self sendHTTPRequest:@"POST"
+                    toURL:@"/addvenue"
+               withParams:params
+                 callback:callback];
 }
 
-- (NSString*) editVenue:(NSString*)vid addressDictionary:(NSDictionary*)addressDictionary
+- (void) editVenue:(NSString*)vid addressDictionary:(NSDictionary*)addressDictionary callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithDictionary:addressDictionary];
     [params setValue:@"vid" forKey:vid];
-    
-    NSArray* args = [NSArray arrayWithObjects:@"POST",
-                     @"/venue/proposeedit",
-                     addressDictionary,
-                     responseId,
-                     nil];
-    
-    [self pushInvocationWithArgs:args];
 
-    return responseId;
+    [self sendHTTPRequest:@"POST"
+                    toURL:@"/venue/proposeedit"
+               withParams:addressDictionary
+                 callback:callback];
 }
 
-- (NSString*) venueClosed:(NSString*)vid
+- (void) venueClosed:(NSString*)vid callback:(SGCallback*)callback
 {
-    NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:vid, @"vid", nil];
-    NSString* responseId = [self getNextRequestId];
-    NSArray* args = [NSArray arrayWithObjects:@"POST",
-                        @"/venue/flagclosed",
-                        params, 
-                        responseId,
-                        nil];
-
-    [self pushInvocationWithArgs:args];
-        
-    return responseId;
+    [self sendHTTPRequest:@"POST"
+                    toURL:@"/venue/flagclosed"
+               withParams:nil
+                 callback:callback];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -426,9 +347,8 @@ typedef NSInteger SGFoursquareResponse;
 #pragma mark Tips methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) tipsNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(NSInteger)limit
+- (void) tipsNearbyCoordinate:(CLLocationCoordinate2D)coordinate limit:(NSInteger)limit callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                     [NSString stringWithFormat:@"%f", coordinate.latitude], @"geolat",
                                     [NSString stringWithFormat:@"%f", coordinate.longitude], @"geolong",
@@ -436,64 +356,48 @@ typedef NSInteger SGFoursquareResponse;
     if(limit > 0)
         [params setObject:[NSString stringWithFormat:@"%i", limit] forKey:@"limit"];
 
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                        @"tips",
-                        params,
-                        responseId,
-                        nil];
-    
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    [self sendHTTPRequest:@"GET"
+                    toURL:@"/tips"
+               withParams:params
+                 callback:callback];
 }
 
-- (NSString*) addTipToVenue:(NSString*)vid tip:(NSString*)tip type:(NSString*)type
+- (void) addTipToVenue:(NSString*)vid tip:(NSString*)tip type:(NSString*)type callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
     NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:
                             vid, @"vid",
                             tip, @"tip",
                             type, @"type",
                             nil];
     
-    NSArray* args = [NSArray arrayWithObjects:@"POST",
-                     @"/addtip",
-                     params,
-                     responseId,
-                     nil];
-    
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    [self sendHTTPRequest:@"POST"
+                    toURL:@"/addtip"
+               withParams:params
+                 callback:callback];
 }
 
-- (NSString*) markTipAsToDo:(NSString*)tid
+- (void) markTipAsToDo:(NSString*)tid callback:(SGCallback*)callback
 {
-    return [self _updateStatus:@"marktodo" ofTip:tid];
+    return [self _updateStatus:@"marktodo" ofTip:tid callback:callback];
 }
 
-- (NSString*) markTipAsDone:(NSString*)tid
+- (void) markTipAsDone:(NSString*)tid callback:(SGCallback*)callback
 {
-    return [self _updateStatus:@"markdone" ofTip:tid];
+    return [self _updateStatus:@"markdone" ofTip:tid callback:callback];
 }
 
-- (NSString*) unmarkTip:(NSString*)tid
+- (void) unmarkTip:(NSString*)tid callback:(SGCallback*)callback
 {
-    return [self _updateStatus:@"unmark" ofTip:tid];
+    return [self _updateStatus:@"unmark" ofTip:tid callback:callback];
 }
 
-- (NSString*) _updateStatus:(NSString*)status ofTip:(NSString*)tid
+- (void) _updateStatus:(NSString*)status ofTip:(NSString*)tid callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
     NSDictionary* params = [NSDictionary dictionaryWithObjectsAndKeys:tid, @"tid", nil];
-    NSArray* args = [NSArray arrayWithObjects:@"POST",
-                     [NSString stringWithFormat:@"/tip/%@", status],
-                     params,
-                     responseId,
-                     nil];
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    [self sendHTTPRequest:@"POST"
+                    toURL:[NSString stringWithFormat:@"/tip/%@", status]
+               withParams:params
+                 callback:callback];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -501,128 +405,58 @@ typedef NSInteger SGFoursquareResponse;
 #pragma mark Friends methods 
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
-- (NSString*) pendingFriendRequests
+- (void) pendingFriendRequestsCallback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     @"/friend/requests",
-                     [NSNull null],
-                     responseId,
-                     nil];
-
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    [self sendHTTPRequest:@"GET"
+                    toURL:@"/friend/requests"
+               withParams:nil
+                 callback:callback];
 }
 
-- (NSString*) approveFriendRequest:(NSString*)uid
+- (void) approveFriendRequest:(NSString*)uid callback:(SGCallback*)callback
 {
-    return [self _updateFriendRequest:uid status:@"approve"];
+    [self _updateFriendRequest:uid status:@"approve" callback:callback];
 }
 
-- (NSString*) denyFriendRequest:(NSString*)uid
+- (void) denyFriendRequest:(NSString*)uid callback:(SGCallback*)callback
 {
-    return [self _updateFriendRequest:uid status:@"deny"];
+    [self _updateFriendRequest:uid status:@"deny" callback:callback];
 }
 
-- (NSString*) sendFriendRequest:(NSString*)uid
+- (void) sendFriendRequest:(NSString*)uid callback:(SGCallback*)callback
 {
-    return [self _updateFriendRequest:uid status:@"sendrequest"];
+    [self _updateFriendRequest:uid status:@"sendrequest" callback:callback];
 }
 
-- (NSString*) _updateFriendRequest:(NSString*)uid status:(NSString*)status
+- (void) _updateFriendRequest:(NSString*)uid status:(NSString*)status callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
-    NSArray* args = [NSArray arrayWithObjects:@"POST",
-                     [NSString stringWithFormat:@"/friend/%@", status],
-                     [NSNull null],
-                     responseId,
-                     nil];
-
-    [self pushInvocationWithArgs:args];
-    
-    return responseId;
+    [self sendHTTPRequest:@"POST"
+                    toURL:[NSString stringWithFormat:@"/friend/%@", status]
+               withParams:nil
+                 callback:callback];
 }
 
-- (NSString*) findFriendsViaName:(NSString*)keyword
+- (void) findFriendsViaName:(NSString*)keyword callback:(SGCallback*)callback
 {
-    return [self _findFriends:keyword byMedium:@"byname"];
+    [self _findFriends:keyword byMedium:@"byname" callback:callback];
 }
 
-- (NSString*) findFriendsViaTwitter:(NSString*)keyword
+- (void) findFriendsViaTwitter:(NSString*)keyword callback:(SGCallback*)callback
 {
-    return [self _findFriends:keyword byMedium:@"bytwitter"];
+    [self _findFriends:keyword byMedium:@"bytwitter" callback:callback];
 }
 
-- (NSString*) findFriendsViaPhone:(NSString*)keyword
+- (void) findFriendsViaPhone:(NSString*)keyword callback:(SGCallback*)callback
 {
-    return [self _findFriends:keyword byMedium:@"byphone"];
+    [self _findFriends:keyword byMedium:@"byphone" callback:callback];
 }
 
-- (NSString*) _findFriends:(NSString*)keyword byMedium:(NSString*)meduim
+- (void) _findFriends:(NSString*)keyword byMedium:(NSString*)meduim callback:(SGCallback*)callback
 {
-    NSString* responseId = [self getNextRequestId];
-    NSArray* args = [NSArray arrayWithObjects:@"GET",
-                     [NSString stringWithFormat:@"/findfriends/%@", meduim],
-                     [NSNull null],
-                     responseId,
-                     nil];
-
-    [self pushInvocationWithArgs:args];
-
-    return responseId;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark HTTPRequest recievers 
-//////////////////////////////////////////////////////////////////////////////////////////////// 
-
-- (void) failed:(NSDictionary*)response
-{
-    for(id<SGGimmeFoursquareDelegate> delegate in delegates)
-        [delegate fourSquare:self requestFailed:[response objectForKey:@"requestId"] error:[response objectForKey:@"error"]];
-}
-
-- (void) succeeded:(NSDictionary*)response
-{
-    NSData* responseObject = [response objectForKey:@"responseObject"];
-    NSDictionary* foursquareResponseObject = [NSDictionary dictionaryWithJSONData:responseObject error:nil];
-    
-    for(id<SGGimmeFoursquareDelegate> delegate in delegates)
-        [delegate fourSquare:self
-            requestSucceeded:[response objectForKey:@"requestId"]
-              responseObject:foursquareResponseObject];
-}
-
-- (NSString*) getNextRequestId
-{
-    responseIdNumber++;
-    return [[[NSString alloc] initWithFormat:@"SGGimmeFoursquare-%i", responseIdNumber] autorelease];
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark SGGimmeFoursquare delegate methods 
-//////////////////////////////////////////////////////////////////////////////////////////////// 
-
-- (void) fourSquare:(SGGimmeFoursquare*)fourSquare requestSucceeded:(NSString*)requestId responseObject:(id)responseObject
-{
-    if(validateUser && [validateUser isEqualToString:requestId]) {
-        NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-        [defaults setObject:[[(NSDictionary*)responseObject objectForKey:@"user"] objectForKey:@"id"]
-                     forKey:@"SGFoursquare-UserId"];
-        
-        validateUser = nil;
-    }
-}
-
-- (void) fourSquare:(SGGimmeFoursquare*)fourSquare requestFailed:(NSString*)requestId error:(NSError*)error
-{
-    if(validateUser && [validateUser isEqualToString:requestId]) {
-     
-        validateUser = nil;
-    }    
+    [self sendHTTPRequest:@"GET"
+                    toURL:[NSString stringWithFormat:@"/findfriends/%@", meduim]
+               withParams: nil
+                 callback:callback];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -630,58 +464,28 @@ typedef NSInteger SGFoursquareResponse;
 #pragma mark Utility methods
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-- (void) sendHTTPRequest:(NSString*)type toURL:(NSString*)file withParams:(NSDictionary*)params requestId:(NSString*)requestId
+- (void) sendHTTPRequest:(NSString*)type toURL:(NSString*)file withParams:(NSDictionary*)params callback:(SGCallback*)callback
 {	
-    if(params && ![params isKindOfClass:[NSNull class]])
-        file = [file stringByAppendingFormat:@".json?%@", [self normalizeRequestParams:params]];
+    file = [file stringByAppendingFormat:@".json"];
+    if(params)
+        file = [file stringByAppendingFormat:@"?%@", [self normalizeRequestParams:params]];
     
     NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@", foursquareURL, file]];
-    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url
-                                                           cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
-                                                       timeoutInterval:10];
-	
+    
+    NSLog(@"SGGimmeFoursquare - Sending %@ to %@", type, file);    
+    OAMutableURLRequest* request = [[OAMutableURLRequest alloc] initWithURL:url
+                                                                   consumer:consumerToken
+                                                                      token:accessToken
+                                                                      realm:nil
+                                                          signatureProvider:nil];
     [request setHTTPMethod:type];
-    [request setValue:[NSString stringWithFormat:@"Basic %@", encodedAuthString] forHTTPHeaderField:@"Authorization"];
-    
-    NSLog(@"GimmeFoursquare - Sending %@ to %@", type, file);    
-    NSError* theError = nil;
-    NSHTTPURLResponse* theResponse = nil;
-    NSData* returnData = [NSURLConnection sendSynchronousRequest:request returningResponse:&theResponse error:&theError];
-	
-    // Possible loss of connection
-    if(!returnData) {
-		for(int i = 0; i < 3 && !returnData; i++) {
-			NSLog(@"Retrying %@ request to %@...", type, [url description]);
-			returnData = [NSURLConnection sendSynchronousRequest:request returningResponse:&theResponse error:&theError];	
-            if(theError)
-                break;
-		}
-    }
-        
-    if(theResponse && ([theResponse statusCode] >= 300 || [theResponse statusCode] < 200)) {
-        if(!theError) {
-            NSString* domain = nil;
-            if(returnData)
-                domain = [[NSString alloc] initWithData:returnData encoding:NSUTF8StringEncoding];
-            else
-                domain = [NSHTTPURLResponse localizedStringForStatusCode:[theResponse statusCode]];
-            
-            theError = [NSError errorWithDomain:domain code:[theResponse statusCode] userInfo:[theResponse allHeaderFields]];
-        }
-    }
-    
-	if(theError) {
-        NSDictionary* response = [NSDictionary dictionaryWithObjectsAndKeys:requestId, @"requestId", theError, @"error", nil];
-        [self performSelectorOnMainThread:@selector(failed:) withObject:response waitUntilDone:NO];
-    } else {
-        NSDictionary* response = [NSDictionary dictionaryWithObjectsAndKeys:requestId, @"requestId", returnData, @"responseObject", nil];
-        [self succeeded:response];
-    }
+    OADataFetcher* fetcher = [[[OADataFetcher alloc] init] autorelease];
+    [fetcher fetchDataWithRequest:request delegate:callback.delegate didFinishSelector:callback.successMethod didFailSelector:callback.failureMethod];
 }
 
 - (NSString*) normalizeRequestParams:(NSDictionary*)params
 {
-    NSMutableArray *parameterPairs = [NSMutableArray arrayWithCapacity:([params count])];
+    NSMutableArray* parameterPairs = [NSMutableArray arrayWithCapacity:([params count])];
     NSString* value;
     for(NSString* param in params) {
         value = [params objectForKey:param];
@@ -693,23 +497,6 @@ typedef NSInteger SGFoursquareResponse;
     return [sortedPairs componentsJoinedByString:@"&"];
 }
 
-- (void) pushInvocationWithArgs:(NSArray*)args
-{	
-    NSMethodSignature* methodSignature = [self methodSignatureForSelector:@selector(sendHTTPRequest:toURL:withParams:requestId:)];
-    NSInvocation* httpRequestInvocation = [NSInvocation invocationWithMethodSignature:methodSignature];
-    [httpRequestInvocation setSelector:@selector(sendHTTPRequest:toURL:withParams:requestId:)];
-    [httpRequestInvocation setTarget:self];    
-    
-    NSString* arg;
-	for(int i = 0; i < [args count]; i++) {
-        arg = [args objectAtIndex:i];
-		[httpRequestInvocation setArgument:&arg atIndex:i + 2];
-    }
-	
-	NSInvocationOperation* opertaion = [[[NSInvocationOperation alloc] initWithInvocation:httpRequestInvocation] autorelease];
-	[operationQueue addOperation:opertaion];			
-}
-
 - (NSMutableDictionary*) getLatLonParams:(CLLocationCoordinate2D)coordinate
 {
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
@@ -719,27 +506,27 @@ typedef NSInteger SGFoursquareResponse;
     return params;
 }
 
-- (NSString*) getEncodedAuthString
-{
-    NSString* authString = [NSString stringWithFormat:@"%@:%@", username, password];
-    NSData* data = [authString dataUsingEncoding:NSUTF8StringEncoding];
-    
-    size_t size;
-    char* encodedString = NewBase64Encode([data bytes], [data length], NO, &size);
-    
-    return [NSString stringWithCString:encodedString encoding:NSUTF8StringEncoding];
-}
-
 - (void) dealloc
 {
-    [password release];
-    [username release];
-    [encodedAuthString release];
-    
-    [delegates release];
-    [operationQueue release];
-    
+    [consumer release];
     [super dealloc];
 }
 
 @end
+
+@implementation SGCallback
+@synthesize delegate, successMethod, failureMethod;
+
+- (id) initWithDelegate:(id)d successMethod:(SEL)sMethod failureMethod:(SEL)fMethod
+{
+    if(self = [super init]) {
+        delegate = d;
+        successMethod = sMethod;
+        failureMethod = fMethod;
+    }
+    
+    return self;
+}
+
+@end
+
