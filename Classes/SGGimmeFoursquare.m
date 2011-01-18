@@ -374,13 +374,13 @@ static NSString* foursquareURL = @"https://api.foursquare.com/v2";
     file = [file stringByAppendingFormat:@".json"];
     NSMutableDictionary* oauthParams = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                         self.accessToken.accessToken, @"oauth_token", nil];
+
     if(params)
         [oauthParams addEntriesFromDictionary:params];
 
     file = [file stringByAppendingFormat:@"?%@", [self normalizeRequestParams:oauthParams]];
     
     NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@", foursquareURL, file]];
-    
     NSLog(@"SGGimmeFoursquare - Sending %@ to %@", type, file);
     
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
