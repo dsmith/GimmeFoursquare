@@ -8,7 +8,6 @@
 
 #import "SGMainViewController.h"
 
-#import "NSDictionary_JSONExtensions.h"
 #import "SGAuthorizeWebViewController.h"
 
 static NSString* key = @"my_key";

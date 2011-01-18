@@ -35,6 +35,8 @@
 #import "SGGimmeFoursquare.h"
 #import "SGAuthorizeWebViewController.h"
 
+#import "NSStringAdditions.h"
+
 static NSString* foursquareURL = @"https://api.foursquare.com/v2";
 
 @interface SGGimmeFoursquare (Private)
@@ -398,7 +400,7 @@ static NSString* foursquareURL = @"https://api.foursquare.com/v2";
     NSString* value;
     for(NSString* param in params) {
         value = [params objectForKey:param];
-        param = [NSString stringWithFormat:@"%@=%@", [param nxoauth2_URLEncodedString], [value nxoauth2_URLEncodedString]];
+        param = [NSString stringWithFormat:@"%@=%@", [param URLEncodedString], [value URLEncodedString]];
         [parameterPairs addObject:param];
     }
     

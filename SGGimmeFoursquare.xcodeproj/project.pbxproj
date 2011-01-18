@@ -13,13 +13,12 @@
 		4A0AD2E012D2FA28003F7217 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A0AD2DF12D2FA28003F7217 /* main.m */; };
 		4A0AD2E412D2FA77003F7217 /* SGGimmeFoursquareDemo-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4A0AD2E312D2FA77003F7217 /* SGGimmeFoursquareDemo-Info.plist */; };
 		4A0AD2E612D2FAA8003F7217 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4A0AD2E512D2FAA8003F7217 /* MainWindow.xib */; };
-		4A0AD2FF12D2FB1E003F7217 /* SGGimmeFoursquare.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27B581195F59B0074BEA7 /* SGGimmeFoursquare.m */; };
 		4A7F2F8912D2BE7C00B7764D /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A7F2F8812D2BE7C00B7764D /* UIKit.framework */; };
+		4A9E515C12E553A4003063F6 /* NSStringAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A9E515912E553A4003063F6 /* NSStringAdditions.m */; };
+		4A9E515D12E553A4003063F6 /* SGGimmeFoursquare.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A9E515B12E553A4003063F6 /* SGGimmeFoursquare.m */; };
 		4AA0668812DD601400D80B1A /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AA0668712DD601400D80B1A /* CoreLocation.framework */; };
 		4AA7194112D835C5005EFC47 /* SGMainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AA7194012D835C5005EFC47 /* SGMainViewController.m */; };
 		4AA7195B12D8397F005EFC47 /* SGDemoAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AA7195A12D8397F005EFC47 /* SGDemoAppDelegate.m */; };
-		4AB27B591195F59B0074BEA7 /* SGGimmeFoursquare.h in Headers */ = {isa = PBXBuildFile; fileRef = 4AB27B571195F59B0074BEA7 /* SGGimmeFoursquare.h */; };
-		4AB27B5A1195F59B0074BEA7 /* SGGimmeFoursquare.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB27B581195F59B0074BEA7 /* SGGimmeFoursquare.m */; };
 		4AB3151F12E4057D007170A2 /* NSMutableURLRequest+NXOAuth2.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB314EC12E4057D007170A2 /* NSMutableURLRequest+NXOAuth2.m */; };
 		4AB3152012E4057D007170A2 /* NSString+NXOAuth2.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB314EE12E4057D007170A2 /* NSString+NXOAuth2.m */; };
 		4AB3152112E4057D007170A2 /* NSURL+NXOAuth2.m in Sources */ = {isa = PBXBuildFile; fileRef = 4AB314F012E4057D007170A2 /* NSURL+NXOAuth2.m */; };
@@ -68,13 +67,15 @@
 		4A0AD2E512D2FAA8003F7217 /* MainWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
 		4A0AD30412D2FC74003F7217 /* SGGimmeFoursquareDemoApp_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SGGimmeFoursquareDemoApp_Prefix.pch; sourceTree = "<group>"; };
 		4A7F2F8812D2BE7C00B7764D /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		4A9E515812E553A4003063F6 /* NSStringAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSStringAdditions.h; sourceTree = "<group>"; };
+		4A9E515912E553A4003063F6 /* NSStringAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSStringAdditions.m; sourceTree = "<group>"; };
+		4A9E515A12E553A4003063F6 /* SGGimmeFoursquare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SGGimmeFoursquare.h; sourceTree = "<group>"; };
+		4A9E515B12E553A4003063F6 /* SGGimmeFoursquare.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SGGimmeFoursquare.m; sourceTree = "<group>"; };
 		4AA0668712DD601400D80B1A /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		4AA7193F12D835C5005EFC47 /* SGMainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SGMainViewController.h; sourceTree = "<group>"; };
 		4AA7194012D835C5005EFC47 /* SGMainViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SGMainViewController.m; sourceTree = "<group>"; };
 		4AA7195912D8397F005EFC47 /* SGDemoAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SGDemoAppDelegate.h; sourceTree = "<group>"; };
 		4AA7195A12D8397F005EFC47 /* SGDemoAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SGDemoAppDelegate.m; sourceTree = "<group>"; };
-		4AB27B571195F59B0074BEA7 /* SGGimmeFoursquare.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SGGimmeFoursquare.h; sourceTree = "<group>"; };
-		4AB27B581195F59B0074BEA7 /* SGGimmeFoursquare.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SGGimmeFoursquare.m; sourceTree = "<group>"; };
 		4AB27C5811961DD20074BEA7 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		4AB314EB12E4057D007170A2 /* NSMutableURLRequest+NXOAuth2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableURLRequest+NXOAuth2.h"; sourceTree = "<group>"; };
 		4AB314EC12E4057D007170A2 /* NSMutableURLRequest+NXOAuth2.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableURLRequest+NXOAuth2.m"; sourceTree = "<group>"; };
@@ -146,10 +147,10 @@
 		0867D691FE84028FC02AAC07 /* GimmeFoursquare */ = {
 			isa = PBXGroup;
 			children = (
+				4A9E515712E553A4003063F6 /* Classes */,
 				4A0AD2AA12D2F876003F7217 /* DemoApp */,
 				4AB27C5811961DD20074BEA7 /* README */,
 				4AB27B851195F6E90074BEA7 /* Resources */,
-				08FB77AEFE84172EC02AAC07 /* Classes */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				0867D69AFE84028FC02AAC07 /* Frameworks */,
 				034768DFFF38A50411DB9C8B /* Products */,
@@ -166,15 +167,6 @@
 				4A7F2F8812D2BE7C00B7764D /* UIKit.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		08FB77AEFE84172EC02AAC07 /* Classes */ = {
-			isa = PBXGroup;
-			children = (
-				4AB27B571195F59B0074BEA7 /* SGGimmeFoursquare.h */,
-				4AB27B581195F59B0074BEA7 /* SGGimmeFoursquare.m */,
-			);
-			path = Classes;
 			sourceTree = "<group>";
 		};
 		32C88DFF0371C24200C91783 /* Other Sources */ = {
@@ -200,6 +192,17 @@
 				4AA7194012D835C5005EFC47 /* SGMainViewController.m */,
 			);
 			path = DemoApp;
+			sourceTree = "<group>";
+		};
+		4A9E515712E553A4003063F6 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				4A9E515812E553A4003063F6 /* NSStringAdditions.h */,
+				4A9E515912E553A4003063F6 /* NSStringAdditions.m */,
+				4A9E515A12E553A4003063F6 /* SGGimmeFoursquare.h */,
+				4A9E515B12E553A4003063F6 /* SGGimmeFoursquare.m */,
+			);
+			path = Classes;
 			sourceTree = "<group>";
 		};
 		4AB27B851195F6E90074BEA7 /* Resources */ = {
@@ -273,7 +276,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4AB27B591195F59B0074BEA7 /* SGGimmeFoursquare.h in Headers */,
 				4AED799811D6CAE800318263 /* SGGimmeFoursquare_Prefix.pch in Headers */,
 				4AB3152912E4057D007170A2 /* NSMutableURLRequest+NXOAuth2.h in Headers */,
 				4AB3152B12E4057D007170A2 /* NSString+NXOAuth2.h in Headers */,
@@ -377,7 +379,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4A0AD2E012D2FA28003F7217 /* main.m in Sources */,
-				4A0AD2FF12D2FB1E003F7217 /* SGGimmeFoursquare.m in Sources */,
 				4AA7194112D835C5005EFC47 /* SGMainViewController.m in Sources */,
 				4AA7195B12D8397F005EFC47 /* SGDemoAppDelegate.m in Sources */,
 				4AB3151F12E4057D007170A2 /* NSMutableURLRequest+NXOAuth2.m in Sources */,
@@ -391,6 +392,8 @@
 				4AB3152712E4057D007170A2 /* NXOAuth2PostBodyPart.m in Sources */,
 				4AB3152812E4057D007170A2 /* NXOAuth2PostBodyStream.m in Sources */,
 				4AB3160312E41363007170A2 /* SGAuthorizeWebViewController.m in Sources */,
+				4A9E515C12E553A4003063F6 /* NSStringAdditions.m in Sources */,
+				4A9E515D12E553A4003063F6 /* SGGimmeFoursquare.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -398,7 +401,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4AB27B5A1195F59B0074BEA7 /* SGGimmeFoursquare.m in Sources */,
 				4AB3152A12E4057D007170A2 /* NSMutableURLRequest+NXOAuth2.m in Sources */,
 				4AB3152C12E4057D007170A2 /* NSString+NXOAuth2.m in Sources */,
 				4AB3152E12E4057D007170A2 /* NSURL+NXOAuth2.m in Sources */,
