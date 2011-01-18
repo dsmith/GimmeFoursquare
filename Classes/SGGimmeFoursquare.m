@@ -33,7 +33,6 @@
 //
 
 #import "SGGimmeFoursquare.h"
-#import "SGAuthorizeWebViewController.h"
 
 #import "NSStringAdditions.h"
 
