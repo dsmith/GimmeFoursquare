@@ -35,10 +35,9 @@
 #import <Foundation/Foundation.h>
 #import <CoreLocation/CoreLocation.h>
 
-#import "OAToken.h"
-#import "OAConsumer.h"
+#import "NXOAuth2.h"
 
-@interface SGCallback : NSObject
+@interface SGCallback : NSObject <NXOAuth2ConnectionDelegate>
 {
     @private
     id delegate;
@@ -50,40 +49,20 @@
 @property (nonatomic, readonly) SEL successMethod;
 @property (nonatomic, readonly) SEL failureMethod;
 
++ (SGCallback*) callbackWithDelegate:(id)delegate successMethod:(SEL)method failureMethod:(SEL)method;
 - (id) initWithDelegate:(id)delegate successMethod:(SEL)method failureMethod:(SEL)method;
 
 @end
 
-@interface SGGimmeFoursquare : NSObject {
-
-    OAConsumer* consumerToken;
+@interface SGGimmeFoursquare : NXOAuth2Client {
 
     @private
-    OAToken* requestToken;
-    OAToken* accessToken;
-
+    BOOL flipped;
 }
-
-@property (nonatomic, readonly) OAConsumer* consumer;
 
 // The key/secret pair should be your consumer key and secret that 
 // you were issued when you registered your application with Foursquare.
-- (id) initWithKey:(NSString*)key secret:(NSString*)secret;
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark OAuth methods 
-//////////////////////////////////////////////////////////////////////////////////////////////// 
-
-// Fetches the access token. Upon a successful request,
-// the class will send the user to the mobile authenticate page
-// using the SGAuthorizeWebViewController.
-- (void) getOAuthAccessToken;
-
-// Once the application recieves a valid request from the callback
-// URL that is registered with Foursquare, this method should be called
-// so we can begin to make requests to Foursquare's API.
-- (void) getOAuthRequestToken;
+- (id) initWithKey:(NSString*)key secret:(NSString*)secret delegate:(id<NXOAuth2ClientDelegate>)delegate;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

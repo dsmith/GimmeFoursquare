@@ -35,14 +35,7 @@
 #import "SGGimmeFoursquare.h"
 #import "SGAuthorizeWebViewController.h"
 
-#import "NSDictionary_JSONExtensions.h"
-#import "NSStringAdditions.h"
-
-#import "OAServiceTicket.h"
-#import "OAToken.h"
-#import "OADataFetcher.h"
-
-static NSString* foursquareURL = @"http://api.foursquare.com/v2";
+static NSString* foursquareURL = @"https://api.foursquare.com/v2";
 
 @interface SGGimmeFoursquare (Private)
 
@@ -54,6 +47,7 @@ static NSString* foursquareURL = @"http://api.foursquare.com/v2";
 - (NSMutableDictionary*) getLatLonParams:(CLLocationCoordinate2D)coordinate;
 
 - (NSString*) normalizeRequestParams:(NSDictionary*)params;
+- (void) reloadCache;
 
 - (void) _updateStatus:(NSString*)status ofTip:(NSString*)tid callback:(SGCallback*)callback;
 - (void) _updateFriendRequest:(NSString*)uid status:(NSString*)status callback:(SGCallback*)callback;
@@ -62,107 +56,17 @@ static NSString* foursquareURL = @"http://api.foursquare.com/v2";
 @end
 
 @implementation SGGimmeFoursquare
-@synthesize consumer;
 
-- (id) initWithKey:(NSString*)key secret:(NSString*)secret
+- (id) initWithKey:(NSString*)key secret:(NSString*)secret delegate:(id<NXOAuth2ClientDelegate, NSObject>)del
 {
-    if(self = [super init]) {
-        consumer = [[OAConsumer alloc] initWithKey:key secret:secret];
-    }
+    if(self = [super initWithClientID:key
+                         clientSecret:secret
+                         authorizeURL:[NSURL URLWithString:@"https://foursquare.com/oauth2/authenticate"]
+                             tokenURL:[NSURL URLWithString:@"https://foursquare.com/oauth2/access_token"]
+                             delegate:del])
+        ;
     
     return self;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark OAuth 
-//////////////////////////////////////////////////////////////////////////////////////////////// 
-
-- (void) getOAuthRequestToken
-{    
-    OAMutableURLRequest* request = [[OAMutableURLRequest alloc] initWithURL:[NSURL URLWithString:@"http://foursquare.com/oauth/request_token"]
-                                                                   consumer:consumer
-                                                                      token:nil
-                                                                      realm:nil
-                                                          signatureProvider:nil];
-    
-    OADataFetcher* fetcher = [[[OADataFetcher alloc] init] autorelease];
-    [fetcher fetchDataWithRequest:request delegate:self didFinishSelector:@selector(requestTokenTicket:didFinishWithData:) didFailSelector:@selector(requestTokenTicket:didFailWithError:)];
-}
-
-- (void) requestTokenTicket:(OAServiceTicket*)ticket didFinishWithData:(NSData*)data
-{
-    if (ticket.didSucceed) {
-        NSString* responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        requestToken = [[OAToken alloc] initWithHTTPResponseBody:responseBody];
-        NSUserDefaults* standardUserDefaults = (NSUserDefaults *)[NSUserDefaults standardUserDefaults];
-        [standardUserDefaults setObject:requestToken.key forKey:@"requestTokenKey"];
-        [standardUserDefaults setObject:requestToken.secret forKey:@"requestTokenSecret"];        
-        [responseBody release];
-        
-        // Update this code if you do not want the default
-        // behavior after a request token has been recieved.
-        SGAuthorizeWebViewController* webViewController = [[SGAuthorizeWebViewController alloc] init];
-        UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController:webViewController];
-
-        UIWindow* window = [[UIApplication sharedApplication] keyWindow];
-        [UIView beginAnimations:@"authorize_web_page" context:nil];
-        [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:window cache:NO];
-        [UIView setAnimationDuration:1.5];
-        [window addSubview:navigationController.view];
-        [UIView commitAnimations];
-    } else {
-        NSString* responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];   
-        NSLog(@"SGGimmeFoursquare - Request Token Failed: %@", responseBody);
-    }
-}
-
-- (void) requestTokenTicket:(OAServiceTicket*)ticket didFailWithError:(NSError*)error
-{
-    NSLog(@"SGGimmeFoursquare - Request Token Failed: %@", error);
-}
-
-- (void) getOAuthAccessToken
-{
-    NSURL* url = [NSURL URLWithString:@"http://foursquare.com/oauth/access_token"];
-    
-    OAToken* token = [[OAToken alloc] initWithKey:[[NSUserDefaults standardUserDefaults] stringForKey:@"requestTokenKey"] 
-                                           secret:[[NSUserDefaults standardUserDefaults] stringForKey:@"requestTokenSecret"]];
-    
-    OAMutableURLRequest* request = [[OAMutableURLRequest alloc] initWithURL:url
-                                                                   consumer:consumer
-                                                                      token:token
-                                                                      realm:nil
-                                                          signatureProvider:nil];
-    
-    OADataFetcher* fetcher = [[[OADataFetcher alloc] init] autorelease];
-    [request setHTTPMethod:@"GET"];    
-    [fetcher fetchDataWithRequest:request
-                         delegate:self 
-                didFinishSelector:@selector(requestAccessTokenTicket:didFinishWithData:)
-                  didFailSelector:@selector(requestAccessTokenTicket:didFailWithError:)];
-}
-
-- (void) requestAccessTokenTicket:(OAServiceTicket*)ticket didFailWithError:(NSError*)error
-{
-    NSLog(@"SGGimmeFoursquare - Request Access Token Failed: %@", error);
-}
-
-- (void) requestAccessTokenTicket:(OAServiceTicket*)ticket didFinishWithData:(NSData*)data
-{    
-    if(ticket.didSucceed) {
-        NSString* responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        
-        accessToken = [[OAToken alloc] initWithHTTPResponseBody:responseBody];
-        [responseBody release];
-        
-        NSUserDefaults* standardUserDefaults = [NSUserDefaults standardUserDefaults];
-        [standardUserDefaults setObject:accessToken.key forKey:@"accessTokenKey"];
-        [standardUserDefaults setObject:accessToken.secret forKey:@"accessTokenSecret"];
-    } else {
-        NSString* responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-        NSLog(@"SGGimmeFoursquare - Request Access Token Failed: %@", responseBody);
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -291,13 +195,13 @@ static NSString* foursquareURL = @"http://api.foursquare.com/v2";
 {
     NSMutableDictionary* params = [self getLatLonParams:coordinate];
     if(limit > 0)
-        [params setObject:[NSString stringWithFormat:@"%i", limit] forKey:@"l"];
+        [params setObject:[NSString stringWithFormat:@"%i", limit] forKey:@"limit"];
     
     if(keyword)
-        [params setObject:keyword forKey:@"q"];
+        [params setObject:keyword forKey:@"query"];
     
     [self sendHTTPRequest:@"GET"
-                    toURL:@"/venues"
+                    toURL:@"/venues/search"
                withParams:params
                  callback:callback];
 }
@@ -455,7 +359,7 @@ static NSString* foursquareURL = @"http://api.foursquare.com/v2";
 {
     [self sendHTTPRequest:@"GET"
                     toURL:[NSString stringWithFormat:@"/findfriends/%@", meduim]
-               withParams: nil
+               withParams:nil
                  callback:callback];
 }
 
@@ -467,20 +371,25 @@ static NSString* foursquareURL = @"http://api.foursquare.com/v2";
 - (void) sendHTTPRequest:(NSString*)type toURL:(NSString*)file withParams:(NSDictionary*)params callback:(SGCallback*)callback
 {	
     file = [file stringByAppendingFormat:@".json"];
+    NSMutableDictionary* oauthParams = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                        self.accessToken.accessToken, @"oauth_token", nil];
     if(params)
-        file = [file stringByAppendingFormat:@"?%@", [self normalizeRequestParams:params]];
+        [oauthParams addEntriesFromDictionary:params];
+
+    file = [file stringByAppendingFormat:@"?%@", [self normalizeRequestParams:oauthParams]];
     
     NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@", foursquareURL, file]];
     
-    NSLog(@"SGGimmeFoursquare - Sending %@ to %@", type, file);    
-    OAMutableURLRequest* request = [[OAMutableURLRequest alloc] initWithURL:url
-                                                                   consumer:consumerToken
-                                                                      token:accessToken
-                                                                      realm:nil
-                                                          signatureProvider:nil];
+    NSLog(@"SGGimmeFoursquare - Sending %@ to %@", type, file);
+    
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     [request setHTTPMethod:type];
-    OADataFetcher* fetcher = [[[OADataFetcher alloc] init] autorelease];
-    [fetcher fetchDataWithRequest:request delegate:callback.delegate didFinishSelector:callback.successMethod didFailSelector:callback.failureMethod];
+    
+    // We probably want to hold onto this object and release
+    // it at some point.
+    [[[NXOAuth2Connection alloc] initWithRequest:request
+                                     oauthClient:self
+                                        delegate:callback] autorelease];
 }
 
 - (NSString*) normalizeRequestParams:(NSDictionary*)params
@@ -489,7 +398,7 @@ static NSString* foursquareURL = @"http://api.foursquare.com/v2";
     NSString* value;
     for(NSString* param in params) {
         value = [params objectForKey:param];
-        param = [NSString stringWithFormat:@"%@=%@", [param URLEncodedString], [value URLEncodedString]];
+        param = [NSString stringWithFormat:@"%@=%@", [param nxoauth2_URLEncodedString], [value nxoauth2_URLEncodedString]];
         [parameterPairs addObject:param];
     }
     
@@ -500,16 +409,9 @@ static NSString* foursquareURL = @"http://api.foursquare.com/v2";
 - (NSMutableDictionary*) getLatLonParams:(CLLocationCoordinate2D)coordinate
 {
     NSMutableDictionary* params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-                                   [NSString stringWithFormat:@"%f", coordinate.latitude], @"geolat",
-                                   [NSString stringWithFormat:@"%f", coordinate.longitude], @"geolong",
+                                   [NSString stringWithFormat:@"%f,%f", coordinate.latitude, coordinate.longitude], @"ll",
                                    nil];
     return params;
-}
-
-- (void) dealloc
-{
-    [consumer release];
-    [super dealloc];
 }
 
 @end
@@ -526,6 +428,21 @@ static NSString* foursquareURL = @"http://api.foursquare.com/v2";
     }
     
     return self;
+}
+
++ (SGCallback*) callbackWithDelegate:(id)delegate successMethod:(SEL)successMethod failureMethod:(SEL)failureMethod
+{
+    return [[[SGCallback alloc] initWithDelegate:delegate successMethod:successMethod failureMethod:failureMethod] autorelease];
+}
+
+- (void) oauthConnection:(NXOAuth2Connection*)connection didFinishWithData:(NSData *)data
+{
+    [delegate performSelector:successMethod withObject:data];    
+}
+
+- (void) oauthConnection:(NXOAuth2Connection*)connection didFailWithError:(NSError *)error
+{
+    [delegate performSelector:failureMethod withObject:error];
 }
 
 @end
