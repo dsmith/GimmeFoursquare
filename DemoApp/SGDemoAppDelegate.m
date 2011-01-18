@@ -19,12 +19,9 @@
     return YES;
 }
 
-- (BOOL) application:(UIApplication *)application handleOpenURL:(NSURL *)url 
+- (BOOL) application:(UIApplication *)application handleOpenURL:(NSURL*)url 
 {
-    // We've registered the OAuth callback URL to launch this application.
-    // Once the request token has been recieved, we can now ask for the access
-    // token
-    [mvc.gimmeFoursquare getOAuthRequestToken];
+    [mvc.gimmeFoursquare openRedirectURL:url];
     return YES;
 }
 

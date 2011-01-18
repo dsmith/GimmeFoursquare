@@ -10,12 +10,17 @@
 
 #import "SGGimmeFoursquare.h"
 
-@interface SGMainViewController : UIViewController {
+@interface SGMainViewController : UIViewController <NXOAuth2ClientDelegate> {
 
     UIButton* accessTokenButton;
     UIButton* requestTokenButton;
+    UIButton* nearbyVenuesButton;
     
     SGGimmeFoursquare* gimmeFoursquare;
+    CLLocationManager* locationManager;
+    
+    @private
+    BOOL flipped;
 }
 
 @property (nonatomic, readonly) SGGimmeFoursquare* gimmeFoursquare;

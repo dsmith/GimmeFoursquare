@@ -8,6 +8,9 @@
 
 #import "SGMainViewController.h"
 
+#import "NSDictionary_JSONExtensions.h"
+#import "SGAuthorizeWebViewController.h"
+
 static NSString* key = @"my_key";
 static NSString* secret = @"my_secret";
 
@@ -17,7 +20,10 @@ static NSString* secret = @"my_secret";
 - (id) init
 {
     if(self = [super init]) {
-        gimmeFoursquare = [[SGGimmeFoursquare alloc] initWithKey:key secret:secret];
+        gimmeFoursquare = [[SGGimmeFoursquare alloc] initWithKey:key secret:secret delegate:self];
+        locationManager = [[CLLocationManager alloc] init];
+        [locationManager startUpdatingLocation];
+        flipped = NO;
     }
     
     return self;
@@ -28,25 +34,103 @@ static NSString* secret = @"my_secret";
     [super viewDidLoad];
     
     requestTokenButton = [[UIButton buttonWithType:UIButtonTypeRoundedRect] retain];
-    [requestTokenButton setTitle:@"Request Token" forState:UIControlStateNormal];
+    [requestTokenButton setTitle:@"Request Access Token" forState:UIControlStateNormal];
     requestTokenButton.frame = CGRectMake(20.0, 10.0, 280.0, 44.0);
-    [requestTokenButton addTarget:gimmeFoursquare
-                           action:@selector(getOAuthRequestToken)
+    [requestTokenButton addTarget:self
+                           action:@selector(authorize)
                  forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:requestTokenButton];
-    
-    accessTokenButton = [[UIButton buttonWithType:UIButtonTypeRoundedRect] retain];
-    [accessTokenButton setTitle:@"Access Token" forState:UIControlStateNormal];
-    accessTokenButton.frame = CGRectMake(20.0, 100.0, 280.0, 44.0);
-    [accessTokenButton addTarget:gimmeFoursquare 
-                          action:@selector(getOAuthAccessToken) 
+        
+    nearbyVenuesButton = [[UIButton buttonWithType:UIButtonTypeRoundedRect] retain];
+    [nearbyVenuesButton setTitle:@"Nearby Venues" forState:UIControlStateNormal];
+    nearbyVenuesButton.frame = CGRectMake(20.0, 190.0, 280.0, 44.0);
+    [nearbyVenuesButton addTarget:self 
+                          action:@selector(nearbyVenues) 
                 forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:accessTokenButton];
+    [self.view addSubview:nearbyVenuesButton];
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+#pragma mark -
+#pragma mark OAuth 
+//////////////////////////////////////////////////////////////////////////////////////////////// 
+
+- (void) flip
+{
+    // Update this code if you do not want the default
+    // behavior after a request token has been recieved.
+    UIWindow* window = [[UIApplication sharedApplication] keyWindow];
+    if(flipped) {
+        [UIView beginAnimations:@"authorize_web_page" context:nil];
+        [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromRight forView:window cache:NO];
+        [UIView setAnimationDuration:1.5];
+        [window.rootViewController.view removeFromSuperview];
+        [UIView commitAnimations];    
+    } else {
+        NSURL* url = [gimmeFoursquare authorizationURLWithRedirectURL:[NSURL URLWithString:@"gimmefoursquare://"]];
+        SGAuthorizeWebViewController* webViewController = [[SGAuthorizeWebViewController alloc] initWithURL:url];
+        UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController:webViewController];
+        
+        UIWindow* window = [[UIApplication sharedApplication] keyWindow];
+        window.rootViewController = navigationController;
+        [UIView beginAnimations:@"authorize_web_page" context:nil];
+        [UIView setAnimationTransition:UIViewAnimationTransitionFlipFromLeft forView:window cache:NO];
+        [UIView setAnimationDuration:1.5];
+        [window addSubview:navigationController.view];
+        [UIView commitAnimations];    
+    }
+    
+    flipped = !flipped;
+}
+
+- (void) authorize
+{ 
+    [gimmeFoursquare requestAccess];
+}
+
+- (void) nearbyVenues
+{
+    SGCallback* callback = [[SGCallback callbackWithDelegate:self
+                                              successMethod:@selector(didFinishWithData:)
+                                              failureMethod:@selector(didFailWithError:)] retain];
+    CLLocationCoordinate2D currentLocation = [locationManager location].coordinate;
+    [gimmeFoursquare venuesNearbyCoordinate:currentLocation
+                                      limit:10
+                                    keyword:nil 
+                                   callback:callback];
+    
+}
+
+- (void) didFinishWithData:(NSData*)data
+{
+    NSLog(@"Incoming payload: \n\n%@", [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] autorelease]);
+}
+
+- (void) didFailWithError:(NSError*)error
+{
+    NSLog(@"Error fetching nearby results: %@", [error description]);
+}
+
+- (void) oauthClientNeedsAuthentication:(NXOAuth2Client*)client
+{
+    [self flip];
+}
+
+- (void) oauthClientDidGetAccessToken:(NXOAuth2Client*)client
+{
+    if(flipped)
+        [self flip];
+}
+
+- (void) oauthClientDidLoseAccessToken:(NXOAuth2Client*)client
+{
+    NSLog(@"Lost the access token");
 }
 
 - (void) dealloc
 {
     [gimmeFoursquare release];
+    [locationManager release];
     [super dealloc];
 }
 
