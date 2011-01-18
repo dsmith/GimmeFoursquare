@@ -1,7 +1,3 @@
-[submodule "OAuth2Client"]
-        path = Resources/3rd-Party/OAuth2Client
-        url = http://github.com/dsmith/OAuth2Client.git
-
 [submodule "Resources/3rd-Party/OAuth2Client"]
 	path = Resources/3rd-Party/OAuth2Client
 	url = https://github.com/dsmith/OAuth2Client.git
