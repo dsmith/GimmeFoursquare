@@ -67,6 +67,7 @@ static NSString* secret = @"my_secret";
         [UIView commitAnimations];    
     } else {
         NSURL* url = [gimmeFoursquare authorizationURLWithRedirectURL:[NSURL URLWithString:@"gimmefoursquare://"]];
+        NSLog(@"%@", [url description]);
         SGAuthorizeWebViewController* webViewController = [[SGAuthorizeWebViewController alloc] initWithURL:url];
         UINavigationController* navigationController = [[UINavigationController alloc] initWithRootViewController:webViewController];
         
@@ -124,6 +125,11 @@ static NSString* secret = @"my_secret";
 - (void) oauthClientDidLoseAccessToken:(NXOAuth2Client*)client
 {
     NSLog(@"Lost the access token");
+}
+
+- (void) oauthClient:(NXOAuth2Client*)client didFailToGetAccessTokenWithError:(NSError*)error 
+{
+    NSLog(@"Failed to retrieve access token: %@", [error description]);
 }
 
 - (void) dealloc
