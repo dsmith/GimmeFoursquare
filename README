@@ -1,1 +1,20 @@
 A simple Foursquare client for all of your iPhone needs!
+
+Work is still be done on this project and I am addressing issues as I come across them.
+
+Things that work:
+
+    - OAuth
+    - Nearby Venue searches
+
+Things that may not work:
+
+    - Everything else
+
+There is a target for a demo application that tests the authentication process of the client along with fetching nearby venues for the devices current location. If you wish to do you own testing you must change the 
+
+static NSString* key = @"my_key";
+static NSString* secret = @"my_secret";
+
+variable declarations that are in teh SGMainViewController.m file.
+    
