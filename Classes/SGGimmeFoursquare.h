@@ -79,8 +79,8 @@
 //////////////////////////////////////////////////////////////////////////////////////////////// 
 
 - (void) checkIns:(NSString*)cityId callback:(SGCallback*)callback;
-- (void) shoutMessage:(NSString*)message coordinate:(CLLocationCoordinate2D)coordinate twitter:(BOOL)enabled callback:(SGCallback*)callback;
-- (void) checkIntoVenue:(NSString*)venueId coordinate:(CLLocationCoordinate2D)coordinate callback:(SGCallback*)callback;
+- (void) shoutMessage:(NSString*)message venue:(NSString*)venueId coordinate:(CLLocationCoordinate2D)coordinate broadcast:(NSString*)broadcast callback:(SGCallback*)callback;
+- (void) checkIntoVenue:(NSString*)venueId broadcast:(NSString*)broadcast coordinate:(CLLocationCoordinate2D)coordinate callback:(SGCallback*)callback;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma mark -

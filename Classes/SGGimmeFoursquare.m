@@ -117,24 +117,26 @@ static NSString* foursquareURL = @"https://api.foursquare.com/v2";
                  callback:callback];
 }
 
-- (void) shoutMessage:(NSString*)message coordinate:(CLLocationCoordinate2D)coordinate twitter:(BOOL)enabled callback:(SGCallback*)callback
+- (void) shoutMessage:(NSString*)message venue:(NSString*)venueId coordinate:(CLLocationCoordinate2D)coordinate broadcast:(NSString*)broadcast callback:(SGCallback*)callback
 {
     NSMutableDictionary* params = [self getLatLonParams:coordinate];
-    [params setObject:[NSString stringWithFormat:@"%i", enabled] forKey:@"twitter"];
+    [params setObject:broadcast forKey:@"broadcast"];
+    [params setObject:venueId forKey:@"venueId"];
     [params setObject:message forKey:@"shout"];
     [self sendHTTPRequest:@"POST"
-                    toURL:@"/checkin"
+                    toURL:@"/checkins/add"
                withParams:params
                  callback:callback];
 }
 
-- (void) checkIntoVenue:(NSString*)vid coordinate:(CLLocationCoordinate2D)coord callback:(SGCallback*)callback
+- (void) checkIntoVenue:(NSString*)vid broadcast:(NSString*)broadcast coordinate:(CLLocationCoordinate2D)coord callback:(SGCallback*)callback
 {
     NSMutableDictionary* params = [self getLatLonParams:coord];
-    [params setObject:vid forKey:@"vid"];
+    [params setObject:vid forKey:@"venueId"];
+    [params setObject:broadcast forKey:@"broadcast"];
     
     [self sendHTTPRequest:@"POST"
-                    toURL:@"/checkin"
+                    toURL:@"/checkins/add"
                withParams:params
                  callback:callback];
 }
